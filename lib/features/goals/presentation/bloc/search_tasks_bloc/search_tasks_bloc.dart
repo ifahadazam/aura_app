@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/tasks_model.dart';
 
 part 'search_tasks_event.dart';
@@ -42,15 +45,21 @@ class SearchTasksBloc extends Bloc<SearchTasksEvent, SearchTasksState> {
     final List<TasksModel> allTasks = Hive.box<TasksModel>(
       'tasks',
     ).values.toList();
+    // final List<TasksModel> allFilteredTasks = Hive.box<TasksModel>(
+    //   HiveConstants.filteredTasksBox,
+    // ).values.toList();
+
     searchedList = allTasks.where((eachTask) {
       if (event.filterTag == 'High') {
         return eachTask.taskPriority.toLowerCase().contains('high');
       } else if (event.filterTag == 'Pending') {
         return eachTask.isTaskDone == false;
       } else if (event.filterTag == 'Completed') {
-        return eachTask.isTaskDone;
-      } else {
+        return eachTask.isTaskDone == true;
+      } else if (event.filterTag == 'Low') {
         return eachTask.taskPriority.toLowerCase().contains('low');
+      } else {
+        return eachTask.taskPriority.toLowerCase().contains('');
       }
     }).toList();
 

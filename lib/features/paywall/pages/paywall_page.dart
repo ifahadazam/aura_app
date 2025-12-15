@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:life_goal/config/themes/typography/typography_theme.dart';
 import 'package:life_goal/core/constants/app_colors.dart';
 import 'package:life_goal/core/constants/app_constants.dart';

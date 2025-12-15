@@ -37,7 +37,7 @@ class BottomBarButton extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  size: iconSize ?? 19,
+                  size: iconSize ?? 22,
                   color: index == tag
                       ? AppColors.themeBlack
                       : AppColors.themeBlack.withAlpha(128),

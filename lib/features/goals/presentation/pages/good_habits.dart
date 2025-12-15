@@ -18,12 +18,13 @@ import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/habit_model.dart';
 import 'package:intl/intl.dart';
 import 'package:life_goal/features/goals/data/models/habits_values_model.dart';
+import 'package:life_goal/features/goals/data/services/habit_stats_service.dart';
+import 'package:life_goal/features/goals/data/services/task_service.dart';
 import 'package:life_goal/features/goals/presentation/bloc/habit_view_bloc/habit_view_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-final daysOfWeek = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 final months = [
   'Jan',
   'Feb',
@@ -140,7 +141,7 @@ class GoodHabits extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.creamyWhiteColor,
       appBar: InternalPageAppBar(
-        title: 'Good Habits',
+        title: 'Habits',
         themeColor: AppColors.themeBlack,
         actions: [
           IconTapButton(
@@ -162,127 +163,104 @@ class GoodHabits extends StatelessWidget {
           ).listenable(),
           builder: (context, allHabitsBox, child) {
             final List<HabitModel> allHabits = allHabitsBox.values.toList();
-            return ValueListenableBuilder(
-              valueListenable: Hive.box<HabitModel>(
-                HiveConstants.habitsBox,
-              ).listenable(),
-              builder: (context, habitsBox, child) {
-                final bool noHabits = habitsBox.isEmpty;
-                return noHabits
-                    ? Center(
-                        child: Text(
-                          'No Habits, Please add One',
-                          style: TypographyTheme.simpleTitleStyle(fontSize: 14),
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          BlocBuilder<HabitViewBloc, HabitViewState>(
-                            builder: (context, state) {
-                              return state.viewTag == 'weekly'
-                                  ? Container(
-                                      padding:
-                                          AppConstants.widgetInternalPadding,
-                                      height: 42,
-                                      width: double.maxFinite,
-                                      child: Expanded(
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            SizedBox.shrink(),
-                                            Row(
-                                              spacing: 8,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
 
-                                              children: List.generate(
-                                                weekDays.length,
-                                                (index) {
-                                                  final bool isToday =
-                                                      todayIndex() == index;
-                                                  return Column(
-                                                    children: [
-                                                      Text(
-                                                        weekDays[index],
-                                                        style: isToday
-                                                            ? TypographyTheme.simpleTitleStyle(
-                                                                fontSize: 11,
-                                                              )
-                                                            : TypographyTheme.simpleSubTitleStyle(
-                                                                fontSize: 11,
-                                                              ),
-                                                      ),
+            return allHabits.isEmpty
+                ? Center(
+                    child: Text(
+                      'No Habits, Please add One',
+                      style: TypographyTheme.simpleTitleStyle(fontSize: 14),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      BlocBuilder<HabitViewBloc, HabitViewState>(
+                        builder: (context, state) {
+                          return state.viewTag == 'weekly'
+                              ? Container(
+                                  padding: AppConstants.widgetInternalPadding,
+                                  height: 42,
+                                  width: double.maxFinite,
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox.shrink(),
+                                      Row(
+                                        spacing: 8,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
 
-                                                      SizedBox(
-                                                        height: 1,
-                                                        width: 25,
+                                        children: List.generate(weekDays.length, (
+                                          index,
+                                        ) {
+                                          final bool isToday =
+                                              todayIndex() == index;
+                                          return Column(
+                                            children: [
+                                              Text(
+                                                weekDays[index],
+                                                style: isToday
+                                                    ? TypographyTheme.simpleTitleStyle(
+                                                        fontSize: 11,
+                                                      )
+                                                    : TypographyTheme.simpleSubTitleStyle(
+                                                        fontSize: 11,
                                                       ),
-                                                      ColoredBox(
-                                                        color: isToday
-                                                            ? AppColors
-                                                                  .themeBlack
-                                                            : AppColors
-                                                                  .greyColor,
-                                                        child: SizedBox(
-                                                          height: 6,
-                                                          width: 1,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : SizedBox.shrink();
-                            },
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: allHabits.length,
-                              itemBuilder: (context, index) {
-                                final eachHbait = allHabits[index];
 
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: AppConstants.kSmallPadding,
-                                  ),
-                                  child:
-                                      BlocBuilder<
-                                        HabitViewBloc,
-                                        HabitViewState
-                                      >(
-                                        builder: (context, state) {
-                                          final view = state.viewTag;
-                                          if (view == 'weekly') {
-                                            return WeeklyHabitStreak(
-                                              habit: eachHbait,
-                                            );
-                                          } else if (view == 'monthly') {
-                                            return MonthlyStreak(
-                                              habit: eachHbait,
-                                            );
-                                          } else {
-                                            return YearlyHabitStreak(
-                                              habit: eachHbait,
-                                            );
-                                          }
-                                        },
+                                              SizedBox(height: 1, width: 25),
+                                              ColoredBox(
+                                                color: isToday
+                                                    ? AppColors.themeBlack
+                                                    : AppColors.greyColor,
+                                                child: SizedBox(
+                                                  height: 6,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }),
                                       ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      );
-              },
-            );
+                                    ],
+                                  ),
+                                )
+                              : SizedBox.shrink();
+                        },
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: allHabits.length,
+                          itemBuilder: (context, index) {
+                            final HabitModel eachHbait = allHabits[index];
+
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: AppConstants.kSmallPadding,
+                              ),
+                              child: BlocBuilder<HabitViewBloc, HabitViewState>(
+                                builder: (context, state) {
+                                  final view = state.viewTag;
+                                  if (view == 'weekly') {
+                                    return WeeklyHabitStreak(
+                                      habit: eachHbait,
+                                      allHabitsBox: allHabitsBox,
+                                    );
+                                  } else if (view == 'monthly') {
+                                    return MonthlyStreak(habit: eachHbait);
+                                  } else {
+                                    return YearlyHabitStreak(habit: eachHbait);
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
           },
         ),
       ),
@@ -441,28 +419,21 @@ class MonthlyStreak extends StatelessWidget {
                           orElse: () => HabitsValuesModel(
                             habitKey: habit.key,
                             habitVlaue: 0,
+                            isHabitCompleted: false,
                           ),
                         );
 
                     return InkWell(
                       onTap: () async {
+                        final taskService = TaskService();
                         if (habit.valueCount == 0) {
-                          log('Value Count is Zero');
-                          if (habitValue.habitVlaue == 0) {
-                            todaysValueBox.add(
-                              HabitsValuesModel(
-                                habitKey: habit.key,
-                                habitVlaue: 1,
-                              ),
-                            );
-                          } else {
-                            todaysValueBox.removeWhere((theHabit) {
-                              return theHabit.habitKey == habit.habitKey;
-                            });
-                          }
-                          await Hive.box(
-                            HiveConstants.habitValueBox,
-                          ).put(dateToday, todaysValueBox);
+                          taskService.completeTodayHabit(
+                            habit,
+                            habitValue,
+                            dateToday,
+                            todaysValueBox,
+                            valueBox,
+                          );
                         } else {
                           log('Value Count is greater than Zero');
                           showModalBottomSheet(
@@ -582,8 +553,11 @@ class MonthlyStreak extends StatelessWidget {
                     (val) {
                       return val.habitKey == habit.key;
                     },
-                    orElse: () =>
-                        HabitsValuesModel(habitKey: habit.key, habitVlaue: 0),
+                    orElse: () => HabitsValuesModel(
+                      habitKey: habit.key,
+                      habitVlaue: 0,
+                      isHabitCompleted: false,
+                    ),
                   );
                   return Container(
                     decoration: BoxDecoration(
@@ -607,8 +581,13 @@ class MonthlyStreak extends StatelessWidget {
 }
 
 class WeeklyHabitStreak extends StatelessWidget {
-  const WeeklyHabitStreak({super.key, required this.habit});
+  const WeeklyHabitStreak({
+    super.key,
+    required this.habit,
+    required this.allHabitsBox,
+  });
   final HabitModel habit;
+  final Box allHabitsBox;
 
   @override
   Widget build(BuildContext context) {
@@ -662,7 +641,10 @@ class WeeklyHabitStreak extends StatelessWidget {
                           children: List.generate(7, (index) {
                             final dateKey =
                                 getCurrentWeekDatesAsStrings()[index];
+                            //  log('The Date Key: $dateKey');
                             final List allValues = valueBox.get(dateKey) ?? [];
+
+                            // final List todaysValues = valueBox.get(key)
 
                             final HabitsValuesModel habitValue = allValues
                                 .firstWhere(
@@ -672,29 +654,30 @@ class WeeklyHabitStreak extends StatelessWidget {
                                   orElse: () => HabitsValuesModel(
                                     habitKey: habit.key,
                                     habitVlaue: 0,
+                                    isHabitCompleted: false,
                                   ),
                                 );
 
                             return InkWell(
                               onTap: () async {
+                                final taskService = TaskService();
+                                final habitStats = HabitStatsService();
                                 if (habit.valueCount == 0) {
-                                  log('Value Count is Zero');
-                                  if (habitValue.habitVlaue == 0) {
-                                    allValues.add(
-                                      HabitsValuesModel(
-                                        habitKey: habit.key,
-                                        habitVlaue: 1,
-                                      ),
-                                    );
-                                  } else {
-                                    allValues.removeWhere((theHabit) {
-                                      return theHabit.habitKey ==
-                                          habit.habitKey;
-                                    });
-                                  }
-                                  await Hive.box(
-                                    HiveConstants.habitValueBox,
-                                  ).put(dateKey, allValues);
+                                  await taskService
+                                      .completeHabit(
+                                        habit,
+                                        habitValue,
+                                        allValues,
+                                        dateKey,
+                                        valueBox,
+                                      )
+                                      .whenComplete(() async {
+                                        await habitStats.calculateHabitStats(
+                                          habitsBox: valueBox,
+                                          allHabits: allHabitsBox,
+                                          habitModel: habit,
+                                        );
+                                      });
                                 } else {
                                   log('Value Count is greater than Zero');
                                   showModalBottomSheet(
@@ -803,8 +786,11 @@ class CustomHabitCompletion extends StatelessWidget {
                 (val) {
                   return val.habitKey == habit.key;
                 },
-                orElse: () =>
-                    HabitsValuesModel(habitKey: habit.key, habitVlaue: 0),
+                orElse: () => HabitsValuesModel(
+                  habitKey: habit.key,
+                  habitVlaue: 0,
+                  isHabitCompleted: false,
+                ),
               );
 
               return Column(
@@ -873,25 +859,15 @@ class CustomHabitCompletion extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
+                              final taskService = TaskService();
                               if (habitValue.habitVlaue != 0) {
-                                int value = habitValue.habitVlaue - 1;
-
-                                final index = allValues.indexWhere(
-                                  (item) => item.habitKey == habit.key,
+                                await taskService.decrementCustomHabit(
+                                  habitValue,
+                                  habit,
+                                  allValues,
+                                  specificDate,
+                                  valueBox,
                                 );
-
-                                if (index == -1) {
-                                } else {
-                                  // Found — update
-                                  allValues[index] = HabitsValuesModel(
-                                    habitKey: habit.key,
-                                    habitVlaue: value,
-                                  );
-                                }
-
-                                await Hive.box(
-                                  HiveConstants.habitValueBox,
-                                ).put(specificDate, allValues);
                               }
                             },
                             child: Container(
@@ -942,33 +918,14 @@ class CustomHabitCompletion extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
-                              if (habitValue.habitVlaue < habit.valueCount) {
-                                int value = habitValue.habitVlaue + 1;
-
-                                final index = allValues.indexWhere(
-                                  (item) => item.habitKey == habit.key,
-                                );
-
-                                if (index == -1) {
-                                  // Not found — add
-                                  allValues.add(
-                                    HabitsValuesModel(
-                                      habitKey: habit.key,
-                                      habitVlaue: value,
-                                    ),
-                                  );
-                                } else {
-                                  // Found — update
-                                  allValues[index] = HabitsValuesModel(
-                                    habitKey: habit.key,
-                                    habitVlaue: value,
-                                  );
-                                }
-
-                                await Hive.box(
-                                  HiveConstants.habitValueBox,
-                                ).put(specificDate, allValues);
-                              }
+                              final taskService = TaskService();
+                              await taskService.incrementCustomHabit(
+                                habitValue,
+                                habit,
+                                allValues,
+                                specificDate,
+                                valueBox,
+                              );
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1002,31 +959,14 @@ class CustomHabitCompletion extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
-                              if (habitValue.habitVlaue > 0) {
-                                final index = allValues.indexWhere(
-                                  (item) => item.habitKey == habit.key,
-                                );
-
-                                if (index == -1) {
-                                  // Not found — add
-                                  allValues.add(
-                                    HabitsValuesModel(
-                                      habitKey: habit.key,
-                                      habitVlaue: 0,
-                                    ),
-                                  );
-                                } else {
-                                  // Found — update
-                                  allValues[index] = HabitsValuesModel(
-                                    habitKey: habit.key,
-                                    habitVlaue: 0,
-                                  );
-                                }
-
-                                await Hive.box(
-                                  HiveConstants.habitValueBox,
-                                ).put(specificDate, allValues);
-                              }
+                              final taskService = TaskService();
+                              await taskService.resetCustomHabit(
+                                habitValue,
+                                habit,
+                                allValues,
+                                specificDate,
+                                valueBox,
+                              );
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1052,31 +992,14 @@ class CustomHabitCompletion extends StatelessWidget {
                         Expanded(
                           child: GestureDetector(
                             onTap: () async {
-                              if (habitValue.habitVlaue != habit.valueCount) {
-                                final index = allValues.indexWhere(
-                                  (item) => item.habitKey == habit.key,
-                                );
-
-                                if (index == -1) {
-                                  // Not found — add
-                                  allValues.add(
-                                    HabitsValuesModel(
-                                      habitKey: habit.key,
-                                      habitVlaue: habit.valueCount,
-                                    ),
-                                  );
-                                } else {
-                                  // Found — update
-                                  allValues[index] = HabitsValuesModel(
-                                    habitKey: habit.key,
-                                    habitVlaue: habit.valueCount,
-                                  );
-                                }
-
-                                await Hive.box(
-                                  HiveConstants.habitValueBox,
-                                ).put(specificDate, allValues);
-                              }
+                              final taskService = TaskService();
+                              await taskService.fillCustomHabit(
+                                habitValue,
+                                habit,
+                                allValues,
+                                specificDate,
+                                valueBox,
+                              );
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1201,28 +1124,22 @@ class YearlyHabitStreak extends StatelessWidget {
                             orElse: () => HabitsValuesModel(
                               habitKey: habit.key,
                               habitVlaue: 0,
+                              isHabitCompleted: false,
                             ),
                           );
 
                       return InkWell(
                         onTap: () async {
+                          final taskService = TaskService();
+
                           if (habit.valueCount == 0) {
-                            log('Value Count is Zero');
-                            if (habitValue.habitVlaue == 0) {
-                              todaysValueBox.add(
-                                HabitsValuesModel(
-                                  habitKey: habit.key,
-                                  habitVlaue: 1,
-                                ),
-                              );
-                            } else {
-                              todaysValueBox.removeWhere((theHabit) {
-                                return theHabit.habitKey == habit.habitKey;
-                              });
-                            }
-                            await Hive.box(
-                              HiveConstants.habitValueBox,
-                            ).put(dateToday, todaysValueBox);
+                            await taskService.completeTodayHabit(
+                              habit,
+                              habitValue,
+                              dateToday,
+                              todaysValueBox,
+                              valueBox,
+                            );
                           } else {
                             log('Value Count is greater than Zero');
                             showModalBottomSheet(
@@ -1352,8 +1269,11 @@ class YearlyGridView extends StatelessWidget {
                 (val) {
                   return val.habitKey == habit.key;
                 },
-                orElse: () =>
-                    HabitsValuesModel(habitKey: habit.key, habitVlaue: 0),
+                orElse: () => HabitsValuesModel(
+                  habitKey: habit.key,
+                  habitVlaue: 0,
+                  isHabitCompleted: false,
+                ),
               );
 
               return Container(

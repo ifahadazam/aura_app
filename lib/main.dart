@@ -24,10 +24,14 @@ void main() async {
   Hive.registerAdapter(HabitModelAdapter());
   Hive.registerAdapter(HabitsValuesModelAdapter());
   await Hive.openBox<TasksModel>(HiveConstants.tasksBox);
+  await Hive.openBox<TasksModel>(HiveConstants.filteredTasksBox);
   await Hive.openBox(HiveConstants.habitValueBox);
   await Hive.openBox<HabitModel>(HiveConstants.habitsBox);
   await Hive.openBox(HiveConstants.unitValuesBox);
   await Hive.openBox(HiveConstants.habitReminderBox);
+  await Hive.openBox(HiveConstants.futureGoalBox);
+  await Hive.openBox(HiveConstants.userPointsBox);
+  await Hive.openBox(HiveConstants.habitStatsBox);
   runApp(const MyApp());
 }
 

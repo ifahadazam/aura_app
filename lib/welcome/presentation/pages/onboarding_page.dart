@@ -9,92 +9,67 @@ class OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final deviceWidth = MediaQuery.sizeOf(context).width;
     return Scaffold(
       backgroundColor: AppColors.creamyWhiteColor,
-      body: Stack(
-        children: [
-          Column(
+      body: SafeArea(
+        child: Padding(
+          padding: AppConstants.widgetInternalPadding,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 3,
-                child: Container(
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage('assets/images/welcome_image.jpg'),
-                    ),
+              Container(
+                height: deviceWidth * 0.7,
+                width: deviceWidth * 0.8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(45),
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/splash_image.png'),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
-              Expanded(flex: 4, child: SizedBox()),
-            ],
-          ),
-          Column(
-            children: [
-              Expanded(flex: 2, child: SizedBox()),
-              Expanded(
-                flex: 4,
-                child: Container(
-                  width: double.maxFinite,
-                  decoration: BoxDecoration(
-                    color: AppColors.creamyWhiteColor,
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(30),
-                      topLeft: Radius.circular(30),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: AppConstants.widgetInternalPadding,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        AppConstants.defaultDoubleSpace,
-                        Text(
-                          'iGoal',
-                          style: TextStyle(
-                            fontFamily: 'Valty DEMO',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 28,
-                          ),
-                        ),
-                        AppConstants.defaultDoubleSpace,
-                        AppConstants.defaultDoubleSpace,
-                        OnBoardingTile(
-                          title: 'Remove Distractions',
-                          iconColor: AppColors.themeBlack,
-                          iconData: Icons.block,
-                          subTitle: 'Eradicate bad habits & boost Time',
-                        ),
-                        OnBoardingTile(
-                          title: 'Practice Good Habits',
-                          iconColor: AppColors.themeBlack,
-                          iconData: Icons.thumb_up_alt_rounded,
-                          subTitle:
-                              'Boost Productivity by performing Daily Good Habits',
-                        ),
-                        OnBoardingTile(
-                          title: 'Perform Related Tasks',
-                          iconColor: AppColors.themeBlack,
-                          iconData: Icons.task_rounded,
-                          subTitle:
-                              'Schedule Tasks & achieve your goals timely.',
-                        ),
-                        OnBoardingTile(
-                          title: 'Track Your Progress',
-                          iconColor: AppColors.themeBlack,
-                          iconData: Icons.bar_chart_rounded,
-                          subTitle:
-                              'Stay ahead of the curve by tracking your activities.',
-                        ),
-                      ],
-                    ),
-                  ),
+              AppConstants.defaultDoubleSpace,
+              Text(
+                'Welcome...',
+                style: TextStyle(
+                  fontFamily: 'Valty DEMO',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
                 ),
+              ),
+              // AppConstants.defaultDoubleSpace,
+              // AppConstants.defaultDoubleSpace,
+              OnBoardingTile(
+                title: 'Remove Distractions',
+                iconColor: AppColors.themeBlack,
+                iconData: Icons.block,
+                subTitle: 'Eradicate bad habits & boost Time',
+              ),
+              OnBoardingTile(
+                title: 'Practice Good Habits',
+                iconColor: AppColors.themeBlack,
+                iconData: Icons.thumb_up_alt_rounded,
+                subTitle: 'Boost Productivity by performing Daily Good Habits',
+              ),
+              OnBoardingTile(
+                title: 'Perform Related Tasks',
+                iconColor: AppColors.themeBlack,
+                iconData: Icons.task_rounded,
+                subTitle: 'Schedule Tasks & achieve your goals timely.',
+              ),
+              OnBoardingTile(
+                title: 'Track Your Progress',
+                iconColor: AppColors.themeBlack,
+                iconData: Icons.bar_chart_rounded,
+                subTitle:
+                    'Stay ahead of the curve by tracking your activities.',
               ),
             ],
           ),
-        ],
+        ),
       ),
+
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.kMediumPadding,
@@ -173,13 +148,13 @@ class OnBoardingTile extends StatelessWidget {
         title,
         textAlign: TextAlign.start,
         style: TypographyTheme.simpleTitleStyle(
-          fontSize: 16,
+          fontSize: 15,
         ).copyWith(color: iconColor),
       ),
       subtitle: Text(
         subTitle,
         textAlign: TextAlign.start,
-        style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
+        style: TypographyTheme.simpleSubTitleStyle(fontSize: 13),
       ),
     );
   }

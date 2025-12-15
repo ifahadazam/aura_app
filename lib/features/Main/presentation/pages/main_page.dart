@@ -11,6 +11,7 @@ import 'package:life_goal/core/shared/buttons/icon_tap_button.dart';
 import 'package:life_goal/features/Home/presentation/pages/home_page.dart';
 import 'package:life_goal/features/Main/presentation/bloc/bottom_bar_bloc/bottom_bar_bloc.dart';
 import 'package:life_goal/features/Main/presentation/widgets/bottom_bar_button.dart';
+import 'package:life_goal/features/Settings/presentation/pages/settings_page.dart';
 import 'package:life_goal/features/goals/presentation/pages/create_task.dart';
 import 'package:life_goal/features/progress/presentation/pages/progress_page.dart';
 
@@ -25,17 +26,30 @@ class MainPage extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: 50,
         backgroundColor: AppColors.transparentColor,
-        title: Row(
-          children: [
-            Image(
-              height: 25,
-              width: 25,
-              fit: BoxFit.cover,
-              image: AssetImage('assets/images/icon.png'),
-            ),
-            AppConstants.singleWidth,
-            Text('iGoal', style: TypographyTheme.homeAppBarTitleStyle()),
-          ],
+        title: BlocBuilder<BottomBarBloc, BottomBarState>(
+          builder: (context, state) {
+            final pageIndex = state.index;
+            return Row(
+              children: [
+                if (pageIndex == 0)
+                  Image(
+                    height: 25,
+                    width: 25,
+                    fit: BoxFit.cover,
+                    image: AssetImage('assets/images/icon.png'),
+                  ),
+                AppConstants.singleWidth,
+                Text(
+                  pageIndex == 0
+                      ? 'iGoal'
+                      : pageIndex == 1
+                      ? 'Progress'
+                      : 'Settings',
+                  style: TypographyTheme.homeAppBarTitleStyle(),
+                ),
+              ],
+            );
+          },
         ),
 
         actions: [
@@ -43,7 +57,7 @@ class MainPage extends StatelessWidget {
             onTap: () {
               context.pushNamed(RouteConstants.settingsPageName);
             },
-            iconDta: Icons.settings,
+            iconDta: Icons.diamond_rounded,
             iconColor: AppColors.themeBlack,
             iconSize: 24,
           ),
@@ -74,7 +88,7 @@ class MainPage extends StatelessWidget {
               final List<Widget> pages = [
                 HomePage(),
                 ProgressPage(),
-                Text('Settings'),
+                SettingsPage(),
               ];
               return SafeArea(child: pages[pageIndex]);
             },
@@ -210,7 +224,7 @@ class MainPage extends StatelessWidget {
                   );
                 },
                 title: 'Home',
-                icon: HugeIcons.strokeRoundedHome03,
+                icon: Icons.home_filled,
               ),
               BottomBarButton(
                 tag: 1,
@@ -220,7 +234,7 @@ class MainPage extends StatelessWidget {
                   );
                 },
                 title: 'Progress',
-                icon: HugeIcons.strokeRoundedProgress04,
+                icon: Icons.bar_chart_rounded,
               ),
               BottomBarButton(
                 tag: 2,
@@ -230,7 +244,7 @@ class MainPage extends StatelessWidget {
                   );
                 },
                 title: 'Settings',
-                icon: HugeIcons.strokeRoundedSettings02,
+                icon: Icons.settings,
               ),
               SizedBox.shrink(),
             ],

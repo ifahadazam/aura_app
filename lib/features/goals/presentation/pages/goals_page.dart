@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +20,20 @@ import 'package:life_goal/features/goals/presentation/bloc/show_search_task_bar_
 import 'package:life_goal/features/goals/presentation/pages/create_task.dart';
 import 'package:life_goal/features/goals/presentation/pages/edit_task.dart';
 
-class GoalsPage extends StatelessWidget {
+class GoalsPage extends StatefulWidget {
   const GoalsPage({super.key});
+
+  @override
+  State<GoalsPage> createState() => _GoalsPageState();
+}
+
+class _GoalsPageState extends State<GoalsPage> {
+  ValueNotifier<int?> isTaskCardExpanded = ValueNotifier<int?>(null);
+  @override
+  void dispose() {
+    super.dispose();
+    isTaskCardExpanded.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,19 +42,20 @@ class GoalsPage extends StatelessWidget {
       appBar: InternalPageAppBar(
         title: 'Tasks',
         themeColor: AppColors.themeBlack,
-        actions: [
-          IconTapButton(
-            onTap: () {
-              context.read<ShowSearchTaskBarBloc>().add(
-                ShowSearchTaskBarEvent(isSearchBarShown: true),
-              );
-            },
-            iconDta: Icons.search,
-            iconColor: AppColors.themeBlack,
-            iconSize: 24,
-          ),
-          AppConstants.singleWidth,
-        ],
+
+        // actions: [
+        //   IconTapButton(
+        //     onTap: () {
+        //       context.read<ShowSearchTaskBarBloc>().add(
+        //         ShowSearchTaskBarEvent(isSearchBarShown: true),
+        //       );
+        //     },
+        //     iconDta: Icons.search,
+        //     iconColor: AppColors.themeBlack,
+        //     iconSize: 24,
+        //   ),
+        //   AppConstants.singleWidth,
+        // ],
       ),
       body: Padding(
         padding: AppConstants.pagesInternalPadding,
@@ -159,156 +174,390 @@ class GoalsPage extends StatelessWidget {
                     : SearchTasks();
               },
             ),
-
             AppConstants.defaultSpace,
 
-            BlocBuilder<SearchTasksBloc, SearchTasksState>(
+            BlocBuilder<
+              GetSelectedTaskPriorityBloc,
+              GetSelectedTaskPriorityState
+            >(
               builder: (context, state) {
-                final searchedTasks = state.searchedTasks;
-                return ValueListenableBuilder(
-                  valueListenable: Hive.box<TasksModel>('tasks').listenable(),
-                  builder: (context, taskBox, child) {
-                    final allTasks = searchedTasks.isEmpty
-                        ? taskBox.values.toList()
-                        : searchedTasks;
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: allTasks.length,
-                        itemBuilder: (context, index) {
-                          final singleTask = allTasks[index];
-                          final title = allTasks[index].title;
-                          final deadline = allTasks[index].taskDate;
-                          final isDone = allTasks[index].isTaskDone;
+                final taskPriority = state.taskPriority;
+                return BlocBuilder<SearchTasksBloc, SearchTasksState>(
+                  builder: (context, state) {
+                    final searchedTasks = state.searchedTasks;
+                    return ValueListenableBuilder(
+                      valueListenable: Hive.box<TasksModel>(
+                        'tasks',
+                      ).listenable(),
+                      builder: (context, taskBox, child) {
+                        // final allTasks = searchedTasks.isEmpty
+                        //     ? taskBox.values.toList()
+                        //     : searchedTasks;
+                        final allTasks = taskBox.values.toList().where((task) {
+                          if (taskPriority == 'High') {
+                            return task.taskPriority.toLowerCase().contains(
+                              'high',
+                            );
+                          } else if (taskPriority == 'Pending') {
+                            return task.isTaskDone == false;
+                          } else if (taskPriority == 'Completed') {
+                            return task.isTaskDone == true;
+                          } else if (taskPriority == 'Low') {
+                            return task.taskPriority.toLowerCase().contains(
+                              'low',
+                            );
+                          } else {
+                            return task.taskPriority.toLowerCase().contains('');
+                          }
+                        }).toList();
 
-                          final date = DateFormat(
-                            'd-MMM-yyyy',
-                            'en_US',
-                          ).parseStrict(deadline);
+                        return Expanded(
+                          child: ListView.builder(
+                            itemCount: allTasks.length,
+                            itemBuilder: (context, index) {
+                              final singleTask = allTasks[index];
+                              final title = allTasks[index].title;
+                              final description = allTasks[index].notes;
+                              final deadline = allTasks[index].taskDate;
+                              final isDone = allTasks[index].isTaskDone;
 
-                          String monthFull = DateFormat(
-                            'MMMM',
-                          ).format(date); // July
+                              final date = DateFormat(
+                                'd-MMM-yyyy',
+                                'en_US',
+                              ).parseStrict(deadline);
 
-                          // final DateTime formattedDate = DateTime.parse(deadline);
-                          final taskTime =
-                              '${date.day} $monthFull - ${allTasks[index].taskTime}';
+                              String monthFull = DateFormat(
+                                'MMMM',
+                              ).format(date); // July
 
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: AppConstants.kSmallPadding / 2,
-                            ),
-                            child: BasicSlidableTile(
-                              onTapAction: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog.adaptive(
-                                      backgroundColor: AppColors.lightGreyColor,
-                                      title: Text(
-                                        'Are you sure?',
-                                        style: TypographyTheme.simpleTitleStyle(
-                                          fontSize: 17,
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            context.pop();
+                              // final DateTime formattedDate = DateTime.parse(deadline);
+                              final String taskTime =
+                                  '${date.day} $monthFull - ${allTasks[index].taskTime}';
+
+                              return ValueListenableBuilder(
+                                valueListenable: isTaskCardExpanded,
+                                builder: (context, isCardExpanded, child) {
+                                  return isTaskCardExpanded.value == index
+                                      ? InkWell(
+                                          onTap: () {
+                                            isTaskCardExpanded.value = null;
                                           },
-                                          child: Text(
-                                            'Cancel',
-                                            style:
-                                                TypographyTheme.simpleTitleStyle(
-                                                  fontSize: 14,
-                                                ),
+                                          child: ExpandedTaskCard(
+                                            title: title,
+                                            deadline: deadline,
+                                            isDone: isDone,
+                                            onTapDelete: () async {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  return AlertDialog.adaptive(
+                                                    backgroundColor: AppColors
+                                                        .lightGreyColor,
+                                                    title: Text(
+                                                      'Are you sure?',
+                                                      style:
+                                                          TypographyTheme.simpleTitleStyle(
+                                                            fontSize: 17,
+                                                          ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          context.pop();
+                                                        },
+                                                        child: Text(
+                                                          'Cancel',
+                                                          style:
+                                                              TypographyTheme.simpleTitleStyle(
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          await TaskService()
+                                                              .deleteTask(
+                                                                singleTask
+                                                                    .taskKey,
+                                                              );
+                                                          await TaskService()
+                                                              .saveCompletedTasksCount();
+                                                          await TaskService()
+                                                              .savePendingTasksCount();
+                                                          if (context.mounted) {
+                                                            context.pop();
+                                                          }
+                                                        },
+                                                        child: Text(
+                                                          'Delete',
+                                                          style:
+                                                              TypographyTheme.simpleTitleStyle(
+                                                                fontSize: 14,
+                                                              ).copyWith(
+                                                                color: AppColors
+                                                                    .redColor,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+
+                                            onTapDone: () async {
+                                              final taskService = TaskService();
+                                              final currentTask =
+                                                  Hive.box<TasksModel>(
+                                                    'tasks',
+                                                  ).get(singleTask.taskKey);
+                                              // log('CT: ${currentTask!.isTaskDone}');
+                                              if (currentTask != null) {
+                                                final TasksModel updatedTask =
+                                                    currentTask.copyWith(
+                                                      isTaskDone: true,
+                                                    );
+                                                await Hive.box<TasksModel>(
+                                                      'tasks',
+                                                    )
+                                                    .put(
+                                                      singleTask.taskKey,
+                                                      updatedTask,
+                                                    )
+                                                    .whenComplete(() async {
+                                                      await taskService
+                                                          .incrementPoints(20);
+                                                    });
+                                                taskService
+                                                    .saveCompletedTasksCount();
+                                              }
+                                            },
+                                            isPriorityHigh:
+                                                singleTask.taskPriority ==
+                                                    'High'
+                                                ? true
+                                                : false,
+                                            onTapUndo: () async {
+                                              if (isDone) {
+                                                final taskService =
+                                                    TaskService();
+                                                final currentTask =
+                                                    Hive.box<TasksModel>(
+                                                      'tasks',
+                                                    ).get(singleTask.taskKey);
+                                                // log('CT: ${currentTask!.isTaskDone}');
+                                                if (currentTask != null) {
+                                                  final TasksModel updatedTask =
+                                                      currentTask.copyWith(
+                                                        isTaskDone: false,
+                                                      );
+                                                  await Hive.box<TasksModel>(
+                                                        'tasks',
+                                                      )
+                                                      .put(
+                                                        singleTask.taskKey,
+                                                        updatedTask,
+                                                      )
+                                                      .whenComplete(() async {
+                                                        await taskService
+                                                            .incrementPoints(
+                                                              -20,
+                                                            );
+                                                      });
+                                                }
+                                                await TaskService()
+                                                    .saveCompletedTasksCount();
+                                              } else {
+                                                showModalBottomSheet(
+                                                  useSafeArea: true,
+                                                  showDragHandle: true,
+                                                  elevation: 30,
+                                                  isScrollControlled: true,
+                                                  backgroundColor: AppColors
+                                                      .creamyWhiteColor,
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return EditTask(
+                                                      task: allTasks[index],
+                                                    );
+                                                  },
+                                                );
+                                              }
+                                            },
+
+                                            description: description,
                                           ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () async {
-                                            await TaskService().deleteTask(
-                                              singleTask.taskKey,
-                                            );
-                                            await TaskService()
-                                                .saveCompletedTasksCount();
-                                            await TaskService()
-                                                .savePendingTasksCount();
-                                            if (context.mounted) {
-                                              context.pop();
-                                            }
-                                          },
-                                          child: Text(
-                                            'Delete',
-                                            style:
-                                                TypographyTheme.simpleTitleStyle(
-                                                  fontSize: 14,
-                                                ).copyWith(
-                                                  color: AppColors.redColor,
-                                                ),
+                                        )
+                                      : Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical:
+                                                AppConstants.kSmallPadding / 2,
                                           ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              actionWidth: 50,
-                              child: EachTask(
-                                isPriorityHigh:
-                                    singleTask.taskPriority == 'High'
-                                    ? true
-                                    : false,
-                                onTapDone: () async {
-                                  final currentTask = Hive.box<TasksModel>(
-                                    'tasks',
-                                  ).get(singleTask.taskKey);
-                                  // log('CT: ${currentTask!.isTaskDone}');
-                                  if (currentTask != null) {
-                                    final TasksModel updatedTask = currentTask
-                                        .copyWith(isTaskDone: true);
-                                    await Hive.box<TasksModel>(
-                                      'tasks',
-                                    ).put(singleTask.taskKey, updatedTask);
-                                    TaskService().saveCompletedTasksCount();
-                                  }
+                                          child: BasicSlidableTile(
+                                            onTapAction: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  return AlertDialog.adaptive(
+                                                    backgroundColor: AppColors
+                                                        .lightGreyColor,
+                                                    title: Text(
+                                                      'Are you sure?',
+                                                      style:
+                                                          TypographyTheme.simpleTitleStyle(
+                                                            fontSize: 17,
+                                                          ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          context.pop();
+                                                        },
+                                                        child: Text(
+                                                          'Cancel',
+                                                          style:
+                                                              TypographyTheme.simpleTitleStyle(
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () async {
+                                                          await TaskService()
+                                                              .deleteTask(
+                                                                singleTask
+                                                                    .taskKey,
+                                                              );
+                                                          await TaskService()
+                                                              .saveCompletedTasksCount();
+                                                          await TaskService()
+                                                              .savePendingTasksCount();
+                                                          if (context.mounted) {
+                                                            context.pop();
+                                                          }
+                                                        },
+                                                        child: Text(
+                                                          'Delete',
+                                                          style:
+                                                              TypographyTheme.simpleTitleStyle(
+                                                                fontSize: 14,
+                                                              ).copyWith(
+                                                                color: AppColors
+                                                                    .redColor,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                            actionWidth: 50,
+                                            child: InkWell(
+                                              onTap: () {
+                                                isTaskCardExpanded.value =
+                                                    index;
+                                              },
+                                              child: EachTask(
+                                                isPriorityHigh:
+                                                    singleTask.taskPriority ==
+                                                        'High'
+                                                    ? true
+                                                    : false,
+                                                onTapDone: () async {
+                                                  final taskService =
+                                                      TaskService();
+                                                  final currentTask =
+                                                      Hive.box<TasksModel>(
+                                                        'tasks',
+                                                      ).get(singleTask.taskKey);
+                                                  // log('CT: ${currentTask!.isTaskDone}');
+                                                  if (currentTask != null) {
+                                                    final TasksModel
+                                                    updatedTask = currentTask
+                                                        .copyWith(
+                                                          isTaskDone: true,
+                                                        );
+                                                    await Hive.box<TasksModel>(
+                                                          'tasks',
+                                                        )
+                                                        .put(
+                                                          singleTask.taskKey,
+                                                          updatedTask,
+                                                        )
+                                                        .whenComplete(() async {
+                                                          await taskService
+                                                              .incrementPoints(
+                                                                20,
+                                                              );
+                                                        });
+                                                    TaskService()
+                                                        .saveCompletedTasksCount();
+                                                  }
+                                                },
+                                                title: title,
+                                                deadline: taskTime,
+                                                isDone: isDone,
+                                                onTapTrailing: () async {
+                                                  if (isDone) {
+                                                    final taskService =
+                                                        TaskService();
+                                                    final currentTask =
+                                                        Hive.box<TasksModel>(
+                                                          'tasks',
+                                                        ).get(
+                                                          singleTask.taskKey,
+                                                        );
+                                                    // log('CT: ${currentTask!.isTaskDone}');
+                                                    if (currentTask != null) {
+                                                      final TasksModel
+                                                      updatedTask = currentTask
+                                                          .copyWith(
+                                                            isTaskDone: false,
+                                                          );
+                                                      await Hive.box<
+                                                            TasksModel
+                                                          >('tasks')
+                                                          .put(
+                                                            singleTask.taskKey,
+                                                            updatedTask,
+                                                          )
+                                                          .whenComplete(() async {
+                                                            await taskService
+                                                                .incrementPoints(
+                                                                  -20,
+                                                                );
+                                                          });
+                                                    }
+                                                    await TaskService()
+                                                        .saveCompletedTasksCount();
+                                                  } else {
+                                                    showModalBottomSheet(
+                                                      useSafeArea: true,
+                                                      showDragHandle: true,
+                                                      elevation: 30,
+                                                      isScrollControlled: true,
+                                                      backgroundColor: AppColors
+                                                          .creamyWhiteColor,
+                                                      context: context,
+                                                      builder: (context) {
+                                                        return EditTask(
+                                                          task: allTasks[index],
+                                                        );
+                                                      },
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        );
                                 },
-                                title: title,
-                                deadline: taskTime,
-                                isDone: isDone,
-                                onTapTrailing: () async {
-                                  if (isDone) {
-                                    final currentTask = Hive.box<TasksModel>(
-                                      'tasks',
-                                    ).get(singleTask.taskKey);
-                                    // log('CT: ${currentTask!.isTaskDone}');
-                                    if (currentTask != null) {
-                                      final TasksModel updatedTask = currentTask
-                                          .copyWith(isTaskDone: false);
-                                      await Hive.box<TasksModel>(
-                                        'tasks',
-                                      ).put(singleTask.taskKey, updatedTask);
-                                    }
-                                    await TaskService()
-                                        .saveCompletedTasksCount();
-                                  } else {
-                                    showModalBottomSheet(
-                                      useSafeArea: true,
-                                      showDragHandle: true,
-                                      elevation: 30,
-                                      isScrollControlled: true,
-                                      backgroundColor:
-                                          AppColors.creamyWhiteColor,
-                                      context: context,
-                                      builder: (context) {
-                                        return EditTask(task: allTasks[index]);
-                                      },
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                              );
+                            },
+                          ),
+                        );
+                      },
                     );
                   },
                 );
@@ -402,6 +651,157 @@ class _SearchTasksState extends State<SearchTasks> {
   }
 }
 
+class ExpandedTaskCard extends StatelessWidget {
+  const ExpandedTaskCard({
+    super.key,
+    required this.title,
+    required this.deadline,
+    required this.isDone,
+    required this.onTapDelete,
+    required this.onTapDone,
+    required this.isPriorityHigh,
+    required this.onTapUndo,
+    required this.description,
+  });
+  final String title;
+  final String deadline;
+  final bool isDone;
+  final VoidCallback onTapUndo;
+  final VoidCallback onTapDone;
+  final VoidCallback onTapDelete;
+  final bool isPriorityHigh;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppConstants.kSmallPadding / 2,
+      ),
+      child: Container(
+        padding: AppConstants.widgetInternalPadding,
+        decoration: BoxDecoration(
+          color: AppColors.themeWhite,
+          borderRadius: AppConstants.widgetBorderRadius,
+          border: Border.all(
+            color: isPriorityHigh
+                ? AppColors.lightRedColor
+                : AppColors.lightGreyColor,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              title,
+
+              style: TypographyTheme.simpleTitleStyle(fontSize: 14).copyWith(
+                decoration: isDone
+                    ? TextDecoration.lineThrough
+                    : TextDecoration.none,
+                color: isDone ? AppColors.greyColor : AppColors.themeBlack,
+              ),
+            ),
+            AppConstants.defualtHalfSpace,
+            Text(
+              description,
+
+              style: TypographyTheme.simpleSubTitleStyle(fontSize: 14).copyWith(
+                decoration: isDone
+                    ? TextDecoration.lineThrough
+                    : TextDecoration.none,
+                color: isDone ? AppColors.greyColor : Colors.black54,
+              ),
+            ),
+            AppConstants.defaultDoubleSpace,
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppConstants.kMediumPadding,
+                    vertical: AppConstants.kSmallPadding,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: AppConstants.widgetBorderRadius,
+                    color: AppColors.xtraLightGreyColor,
+                    //  border: Border.all(color: AppColors.xtraLightGreyColor),
+                  ),
+                  child: Text(
+                    deadline,
+                    style: TypographyTheme.simpleSubTitleStyle(fontSize: 11)
+                        .copyWith(
+                          decoration: isDone
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          color: isDone
+                              ? AppColors.greyColor
+                              : AppColors.lightBlackColor,
+                        ),
+                  ),
+                ),
+                Spacer(),
+                InkWell(
+                  onTap: onTapUndo,
+
+                  child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      color: AppColors.xtraLightGreyColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(isDone ? Icons.undo : Icons.edit, size: 22),
+                    ),
+                  ),
+                ),
+
+                AppConstants.halfWidth,
+                InkWell(
+                  onTap: onTapDelete,
+                  child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      color: AppColors.xtraLightGreyColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(child: Icon(Icons.delete, size: 22)),
+                  ),
+                ),
+                AppConstants.halfWidth,
+                InkWell(
+                  onTap: onTapDone,
+                  child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      color: isDone
+                          ? AppColors.themeBlack
+                          : AppColors.xtraLightGreyColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.done,
+                        size: 22,
+                        color: isDone
+                            ? AppColors.themeWhite
+                            : AppColors.themeBlack,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class EachTask extends StatelessWidget {
   const EachTask({
     super.key,
@@ -422,7 +822,7 @@ class EachTask extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 65,
+      // height: 65,
       width: double.maxFinite,
       padding: AppConstants.widgetInternalPadding,
       decoration: BoxDecoration(
@@ -464,7 +864,7 @@ class EachTask extends StatelessWidget {
               children: [
                 Text(
                   title,
-
+                  overflow: TextOverflow.ellipsis,
                   style: TypographyTheme.simpleTitleStyle(fontSize: 14)
                       .copyWith(
                         decoration: isDone
@@ -490,6 +890,7 @@ class EachTask extends StatelessWidget {
               ],
             ),
           ),
+          AppConstants.halfWidth,
           InkWell(
             onTap: onTapTrailing,
             child: Icon(

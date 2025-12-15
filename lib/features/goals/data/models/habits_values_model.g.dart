@@ -19,17 +19,20 @@ class HabitsValuesModelAdapter extends TypeAdapter<HabitsValuesModel> {
     return HabitsValuesModel(
       habitKey: fields[0] as String,
       habitVlaue: fields[1] as int,
+      isHabitCompleted: fields[2] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, HabitsValuesModel obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.habitKey)
       ..writeByte(1)
-      ..write(obj.habitVlaue);
+      ..write(obj.habitVlaue)
+      ..writeByte(2)
+      ..write(obj.isHabitCompleted);
   }
 
   @override

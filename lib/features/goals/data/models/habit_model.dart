@@ -39,6 +39,24 @@ class HabitModel extends HiveObject {
   @HiveField(10)
   final String habitType;
 
+  @HiveField(11)
+  final int? currentStreak;
+
+  @HiveField(12)
+  final int? bestStreak;
+
+  @HiveField(13)
+  final int? totalTrackedDays;
+
+  @HiveField(14)
+  final int? totalCompletedDays;
+
+  @HiveField(15)
+  final int? totalSkippedDays;
+
+  @HiveField(15)
+  final double? completionRate;
+
   HabitModel({
     required this.title,
     required this.description,
@@ -51,6 +69,12 @@ class HabitModel extends HiveObject {
     required this.habitColor,
     required this.habitKey,
     required this.habitType,
+    this.currentStreak = 0,
+    this.bestStreak = 0,
+    this.completionRate = 0.0,
+    this.totalCompletedDays = 0,
+    this.totalSkippedDays = 0,
+    this.totalTrackedDays = 0,
   });
 
   HabitModel copyWith({
@@ -65,6 +89,12 @@ class HabitModel extends HiveObject {
     String? habitColor,
     String? habitKey,
     String? habitType,
+    int? currentStreak,
+    int? bestStreak,
+    int? totalTrackedDays,
+    int? totalCompletedDays,
+    int? totalSkippedDays,
+    double? completionRate,
   }) {
     return HabitModel(
       title: title ?? this.title,
@@ -78,6 +108,12 @@ class HabitModel extends HiveObject {
       habitColor: habitColor ?? this.habitColor,
       habitKey: habitKey ?? this.habitKey,
       habitType: habitType ?? this.habitType,
+      currentStreak: currentStreak ?? this.currentStreak,
+      bestStreak: bestStreak ?? this.bestStreak,
+      totalCompletedDays: totalCompletedDays ?? this.totalCompletedDays,
+      totalSkippedDays: totalSkippedDays ?? this.totalSkippedDays,
+      totalTrackedDays: totalTrackedDays ?? this.totalTrackedDays,
+      completionRate: completionRate ?? this.completionRate,
     );
   }
 }

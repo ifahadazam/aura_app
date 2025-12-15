@@ -135,7 +135,7 @@ class _EditTaskState extends State<EditTask> {
               TextInputField(
                 themeColor: AppColors.lightBlackColor,
                 maxLines: 2,
-                textController: TextEditingController(),
+                textController: notesController,
                 hintText: 'Add additional notes here..',
                 obscureText: false,
                 keyboardType: TextInputType.text,

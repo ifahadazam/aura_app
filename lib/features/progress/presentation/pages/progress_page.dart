@@ -1,8 +1,15 @@
+import 'dart:developer';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:life_goal/config/themes/typography/typography_theme.dart';
 import 'package:life_goal/core/constants/app_colors.dart';
 import 'package:life_goal/core/constants/app_constants.dart';
+import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
+import 'package:life_goal/features/goals/data/models/habit_model.dart';
+import 'package:life_goal/features/goals/data/models/habits_values_model.dart';
 import 'package:life_goal/features/progress/presentation/widgets/monthly_line_chart.dart';
 import 'package:life_goal/features/progress/presentation/widgets/weekly_bar_graph.dart';
 
@@ -30,7 +37,7 @@ class _ProgressPageState extends State<ProgressPage> {
         child: Column(
           spacing: 8,
           children: [
-            LevelNPointsWidget(),
+            // LevelNPointsWidget(),
             HabitStats(),
             DefaultTabController(
               length: 2,
@@ -98,6 +105,79 @@ class HabitStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: Hive.box<HabitModel>(
+        HiveConstants.habitsBox,
+      ).listenable(),
+      builder: (context, allHabitsBox, child) {
+        final allHabits = allHabitsBox.values.toList();
+
+        // final HabitModel firstValue = allHabits.isEmpty
+        //     ? HabitModel(
+        //         title: 'Default Habit',
+        //         description: 'Default Habit description',
+        //         habitValue: 0,
+        //         valueCount: 0,
+        //         streakGoal: 0,
+        //         isDone: false,
+        //         reminderDays: [],
+        //         reminderTime: '',
+        //         habitColor: '',
+        //         habitKey: '',
+        //         habitType: '',
+        //       )
+        //     : allHabits.first;
+
+        // log('First Value: ${firstValue.totalTrackedDays}');
+        return ValueListenableBuilder(
+          valueListenable: Hive.box(HiveConstants.unitValuesBox).listenable(),
+          builder: (context, unitBox, child) {
+            final selectedHabit =
+                unitBox.get(HiveConstants.selectedHabitStat) ?? '';
+            final choosedHabit = allHabitsBox.get(selectedHabit);
+            return allHabits.isEmpty
+                ? AllHabitStats(
+                    totalDaysTracked: 0,
+                    completedDays: 0,
+                    skippedDays: 0,
+                    currentStreak: 0,
+                    bestStreak: 0,
+                    completionRate: 0.0,
+                  )
+                : AllHabitStats(
+                    totalDaysTracked: choosedHabit?.totalTrackedDays ?? 0,
+                    completedDays: choosedHabit?.totalCompletedDays ?? 0,
+                    skippedDays: choosedHabit?.totalSkippedDays ?? 0,
+                    currentStreak: choosedHabit?.currentStreak ?? 0,
+                    bestStreak: choosedHabit?.bestStreak ?? 0,
+                    completionRate: choosedHabit?.completionRate ?? 0,
+                  );
+          },
+        );
+      },
+    );
+  }
+}
+
+class AllHabitStats extends StatelessWidget {
+  const AllHabitStats({
+    super.key,
+    required this.totalDaysTracked,
+    required this.completedDays,
+    required this.skippedDays,
+    required this.currentStreak,
+    required this.bestStreak,
+    required this.completionRate,
+  });
+  final int totalDaysTracked;
+  final int completedDays;
+  final int skippedDays;
+  final int currentStreak;
+  final int bestStreak;
+  final double completionRate;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 240,
       width: double.maxFinite,
@@ -137,14 +217,145 @@ class HabitStats extends StatelessWidget {
                 ],
               ),
               Spacer(),
-              Container(
-                height: 50,
-                width: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.xtraLightGreyColor,
-                  borderRadius: AppConstants.widgetMediumBorderRadius,
+              InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                    backgroundColor: AppColors.themeWhite,
+                    showDragHandle: true,
+                    enableDrag: true,
+                    context: context,
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(
+                          AppConstants.kLargePadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Choose Habit',
+                              style: TypographyTheme.simpleTitleStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                            AppConstants.defaultDoubleSpace,
+                            ValueListenableBuilder(
+                              valueListenable: Hive.box<HabitModel>(
+                                HiveConstants.habitsBox,
+                              ).listenable(),
+                              builder: (context, habitBox, child) {
+                                final allHabits = habitBox.values.toList();
+
+                                return allHabits.isEmpty
+                                    ? SizedBox.shrink()
+                                    : Expanded(
+                                        child: ListView.builder(
+                                          itemCount: allHabits.length,
+
+                                          itemBuilder: (context, index) {
+                                            final HabitModel eachHabit =
+                                                allHabits[index];
+                                            return InkWell(
+                                              onTap: () {
+                                                Hive.box(
+                                                  HiveConstants.unitValuesBox,
+                                                ).put(
+                                                  HiveConstants
+                                                      .selectedHabitStat,
+                                                  eachHabit.habitKey,
+                                                );
+                                              },
+                                              child: ValueListenableBuilder(
+                                                valueListenable: Hive.box(
+                                                  HiveConstants.unitValuesBox,
+                                                ).listenable(),
+                                                builder: (context, unitValues, child) {
+                                                  final selectedHabit =
+                                                      unitValues.get(
+                                                        HiveConstants
+                                                            .selectedHabitStat,
+                                                      ) ??
+                                                      '';
+                                                  return Container(
+                                                    margin: EdgeInsets.symmetric(
+                                                      vertical:
+                                                          AppConstants
+                                                              .kSmallPadding /
+                                                          1.5,
+                                                    ),
+                                                    height: 45,
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal:
+                                                              AppConstants
+                                                                  .kLargePadding,
+                                                        ),
+                                                    width: double.maxFinite,
+                                                    decoration: BoxDecoration(
+                                                      border:
+                                                          eachHabit.habitKey ==
+                                                              selectedHabit
+                                                          ? Border.all(
+                                                              color: AppColors
+                                                                  .themeBlack,
+                                                              width: 1.0,
+                                                            )
+                                                          : null,
+                                                      borderRadius: AppConstants
+                                                          .widgetMediumBorderRadius,
+                                                      color: AppColors
+                                                          .xtraLightGreyColor,
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          eachHabit.title,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              TypographyTheme.simpleSubTitleStyle(
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                        Icon(
+                                                          CupertinoIcons
+                                                              .rectangle_grid_2x2_fill,
+                                                          color: AppColors
+                                                              .themeBlack,
+                                                          size: 22,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                  height: 50,
+                  width: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.xtraLightGreyColor,
+                    borderRadius: AppConstants.widgetMediumBorderRadius,
+                  ),
+                  child: Center(child: Icon(Icons.keyboard_arrow_down_rounded)),
                 ),
-                child: Center(child: Icon(Icons.keyboard_arrow_down_rounded)),
               ),
             ],
           ),
@@ -174,7 +385,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '53',
+                              totalDaysTracked.toString(),
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),
@@ -196,7 +407,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '17',
+                              currentStreak.toString(),
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),
@@ -218,7 +429,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '46',
+                              completedDays.toString(),
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),
@@ -249,7 +460,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '07',
+                              skippedDays.toString(),
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),
@@ -271,7 +482,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '24',
+                              bestStreak.toString(),
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),
@@ -293,7 +504,7 @@ class HabitStats extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '77%',
+                              '${(completionRate * 100).toStringAsFixed(2)}%',
                               style: TypographyTheme.simpleTitleStyle(
                                 fontSize: 16,
                               ),

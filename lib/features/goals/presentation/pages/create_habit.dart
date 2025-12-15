@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -176,121 +178,123 @@ class _CreateHabitState extends State<CreateHabit> {
                                 onTap: () {
                                   selectedColor.value = colorRow[index];
                                 },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: isColorSelected
-                                          ? AppColors.lightBlackColor
-                                          : AppColors.greyColor,
-                                    ),
-                                    color: colorRow[index],
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
+                                child: index == colorRow.length - 1
+                                    ? GestureDetector(
+                                        onTap: () {
+                                          showModalBottomSheet(
+                                            backgroundColor:
+                                                AppColors.creamyWhiteColor,
+                                            showDragHandle: true,
 
-                                  child: isColorSelected
-                                      ? Center(
-                                          child: Icon(
-                                            Icons.circle,
-                                            size: 12,
-                                            color: AppColors.themeBlack,
+                                            context: context,
+                                            builder: (context) {
+                                              return SizedBox(
+                                                width: double.maxFinite,
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(
+                                                    AppConstants.kMediumPadding,
+                                                  ),
+                                                  child: Wrap(
+                                                    spacing: 12,
+                                                    runSpacing: 12,
+
+                                                    children: List.generate(selectableColors.length, (
+                                                      index,
+                                                    ) {
+                                                      return ValueListenableBuilder(
+                                                        valueListenable:
+                                                            selectedColor,
+                                                        builder:
+                                                            (
+                                                              context,
+                                                              choosenColor,
+                                                              child,
+                                                            ) {
+                                                              final bool
+                                                              isColorSelected =
+                                                                  choosenColor ==
+                                                                  selectableColors[index];
+                                                              return GestureDetector(
+                                                                onTap: () {
+                                                                  selectedColor
+                                                                          .value =
+                                                                      selectableColors[index];
+                                                                },
+                                                                child: Container(
+                                                                  height: 35,
+                                                                  width: 35,
+                                                                  decoration: BoxDecoration(
+                                                                    border: Border.all(
+                                                                      color:
+                                                                          isColorSelected
+                                                                          ? AppColors.lightBlackColor
+                                                                          : AppColors.greyColor,
+                                                                    ),
+                                                                    color:
+                                                                        selectableColors[index],
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          6,
+                                                                        ),
+                                                                  ),
+
+                                                                  child:
+                                                                      isColorSelected
+                                                                      ? Center(
+                                                                          child: Icon(
+                                                                            Icons.circle,
+                                                                            size:
+                                                                                12,
+                                                                            color:
+                                                                                AppColors.themeBlack,
+                                                                          ),
+                                                                        )
+                                                                      : null,
+                                                                ),
+                                                              );
+                                                            },
+                                                      );
+                                                    }),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Icon(
+                                          Icons.keyboard_arrow_right_rounded,
+                                          color: AppColors.themeBlack,
+                                          size: 26,
+                                        ),
+                                      )
+                                    : Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: isColorSelected
+                                                ? AppColors.lightBlackColor
+                                                : AppColors.greyColor,
                                           ),
-                                        )
-                                      : null,
-                                ),
+                                          color: colorRow[index],
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+
+                                        child: isColorSelected
+                                            ? Center(
+                                                child: Icon(
+                                                  Icons.circle,
+                                                  size: 12,
+                                                  color: AppColors.themeBlack,
+                                                ),
+                                              )
+                                            : null,
+                                      ),
                               );
                             },
                           ),
                         );
                       }),
-                    ),
-                  ),
-                  AppConstants.defaultDoubleSpace,
-                  GestureDetector(
-                    onTap: () {
-                      showModalBottomSheet(
-                        backgroundColor: AppColors.creamyWhiteColor,
-                        showDragHandle: true,
-
-                        context: context,
-                        builder: (context) {
-                          return SizedBox(
-                            width: double.maxFinite,
-                            child: Padding(
-                              padding: EdgeInsets.all(
-                                AppConstants.kMediumPadding,
-                              ),
-                              child: Wrap(
-                                spacing: 12,
-                                runSpacing: 12,
-
-                                children: List.generate(
-                                  selectableColors.length,
-                                  (index) {
-                                    return ValueListenableBuilder(
-                                      valueListenable: selectedColor,
-                                      builder: (context, choosenColor, child) {
-                                        final bool isColorSelected =
-                                            choosenColor ==
-                                            selectableColors[index];
-                                        return GestureDetector(
-                                          onTap: () {
-                                            selectedColor.value =
-                                                selectableColors[index];
-                                          },
-                                          child: Container(
-                                            height: 35,
-                                            width: 35,
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: isColorSelected
-                                                    ? AppColors.lightBlackColor
-                                                    : AppColors.greyColor,
-                                              ),
-                                              color: selectableColors[index],
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-
-                                            child: isColorSelected
-                                                ? Center(
-                                                    child: Icon(
-                                                      Icons.circle,
-                                                      size: 12,
-                                                      color:
-                                                          AppColors.themeBlack,
-                                                    ),
-                                                  )
-                                                : null,
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          ' More Colors ',
-                          style:
-                              TypographyTheme.simpleSubTitleStyle(
-                                fontSize: 13,
-                              ).copyWith(
-                                color: AppColors.lightBlackColor.withAlpha(220),
-                              ),
-                        ),
-                        Icon(
-                          Icons.more_horiz,
-                          color: AppColors.themeBlack.withAlpha(220),
-                          size: 20,
-                        ),
-                      ],
                     ),
                   ),
 
@@ -884,6 +888,7 @@ class _CreateHabitState extends State<CreateHabit> {
                     .read<GetStreakGoalBloc>()
                     .state
                     .streakGoal;
+                final theHabitKey = DateTime.now().toString();
                 // final isHabitValueCustom = isValueCustom.value ? 1 : 0;
                 final newHabit = HabitModel(
                   title: title,
@@ -895,11 +900,17 @@ class _CreateHabitState extends State<CreateHabit> {
                   reminderDays: reminderDaysList,
                   reminderTime: reminderTime,
                   habitColor: selectedColorHex,
-                  habitKey: DateTime.now().toString(),
+                  habitKey: theHabitKey,
 
                   habitType: habitType.value,
                 );
-                await taskService.addNewHabit(newHabit);
+                log('The Habit Key: $theHabitKey');
+                await taskService.addNewHabit(newHabit).whenComplete(() async {
+                  await taskService.incrementPoints(10);
+                });
+                //Save the number of Habits in the Hive Box
+                await taskService.saveTotalHabitHabit();
+
                 if (context.mounted) {
                   context.pop();
                 }

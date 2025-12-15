@@ -9,12 +9,24 @@ class HabitsValuesModel extends HiveObject {
   @HiveField(1)
   final int habitVlaue;
 
-  HabitsValuesModel({required this.habitKey, required this.habitVlaue});
+  @HiveField(2)
+  final bool isHabitCompleted;
 
-  HabitsValuesModel copyWith({String? habitKey, int? habitVlaue}) {
+  HabitsValuesModel({
+    required this.habitKey,
+    required this.habitVlaue,
+    required this.isHabitCompleted,
+  });
+
+  HabitsValuesModel copyWith({
+    String? habitKey,
+    int? habitVlaue,
+    bool? isHabitCompleted,
+  }) {
     return HabitsValuesModel(
       habitKey: habitKey ?? this.habitKey,
       habitVlaue: habitVlaue ?? this.habitVlaue,
+      isHabitCompleted: isHabitCompleted ?? this.isHabitCompleted,
     );
   }
 }

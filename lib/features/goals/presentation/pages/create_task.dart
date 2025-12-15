@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:life_goal/config/themes/typography/typography_theme.dart';
 import 'package:life_goal/core/constants/app_colors.dart';
@@ -11,6 +12,7 @@ import 'package:life_goal/core/services/form_validation/validator.dart';
 import 'package:life_goal/core/shared/buttons/action_button.dart';
 import 'package:life_goal/core/shared/buttons/icon_tap_button.dart';
 import 'package:life_goal/core/shared/custom_text_field.dart';
+import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/tasks_model.dart';
 import 'package:life_goal/features/goals/data/services/task_service.dart';
 
@@ -47,7 +49,7 @@ class _CreateTaskState extends State<CreateTask> {
     DateTime? date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
 
@@ -133,7 +135,7 @@ class _CreateTaskState extends State<CreateTask> {
                   themeColor: AppColors.lightBlackColor,
                   focusNode: notesFocusNode,
                   maxLines: 2,
-                  textController: TextEditingController(),
+                  textController: notesController,
                   hintText: 'Add additional notes here..',
                   obscureText: false,
                   keyboardType: TextInputType.text,
@@ -294,8 +296,9 @@ class _CreateTaskState extends State<CreateTask> {
                         isTaskDone: false,
                         taskKey: DateTime.now().toString(),
                       );
-                      taskService.addTask(task).whenComplete(() {
+                      taskService.addTask(task).whenComplete(() async {
                         taskService.savePendingTasksCount();
+                        await taskService.incrementPoints(10);
                         if (context.mounted) {
                           context.pop();
                         }

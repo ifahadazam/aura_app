@@ -1,0 +1,3 @@
+class AppDialogs {
+  AppDialogs._();
+}
