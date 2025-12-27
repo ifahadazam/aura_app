@@ -1,72 +1,66 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:life_goal/config/themes/typography/typography_theme.dart';
 import 'package:life_goal/core/constants/app_colors.dart';
+import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
+import 'package:life_goal/features/goals/data/models/habit_model.dart';
+import 'package:life_goal/features/goals/data/services/habit_stats_service.dart';
 
 class MonthlyLineChart extends StatelessWidget {
   const MonthlyLineChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: <Widget>[LineChart(mainData())]);
+    final habitStats = HabitStatsService();
+    return ValueListenableBuilder(
+      valueListenable: Hive.box<HabitModel>(
+        HiveConstants.habitsBox,
+      ).listenable(),
+      builder: (context, habitBox, child) {
+        return ValueListenableBuilder(
+          valueListenable: Hive.box(HiveConstants.unitValuesBox).listenable(),
+          builder: (context, unitValues, child) {
+            final monthlyDuration =
+                unitValues.get(HiveConstants.selectedMonthlyDuration) ?? 'p28';
+            final monthlyData = monthlyDuration == 'p28'
+                ? habitStats.getLast28DaysHabitCompletion(habitsBox: habitBox)
+                : habitStats.getCurrentMonth28DaysHabitCompletion(
+                    habitsBox: habitBox,
+                  );
+            return monthlyData.isEmpty
+                ? Center(
+                    child: Text(
+                      'No Data Available',
+                      style: TypographyTheme.simpleSubTitleStyle(fontSize: 13),
+                    ),
+                  )
+                : LineChart(mainData(monthlyData));
+          },
+        );
+      },
+    );
   }
 
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    final style = TypographyTheme.simpleSubTitleStyle(fontSize: 13);
-    Widget text;
-    switch (value.toInt()) {
-      case 2:
-        text = Text('MAR', style: style);
-        break;
-      case 5:
-        text = Text('JUN', style: style);
-        break;
-      case 8:
-        text = Text('SEP', style: style);
-        break;
-      default:
-        text = Text('', style: style);
-        break;
-    }
+  LineChartData mainData(Map<String, Map<String, dynamic>> monthlyData) {
+    final dateKeys = monthlyData.keys.toList();
 
-    return SideTitleWidget(meta: meta, child: text);
-  }
-
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    final style = TypographyTheme.simpleTitleStyle(fontSize: 12);
-    String text;
-    switch (value.toInt()) {
-      case 1:
-        text = '10K';
-        break;
-      case 3:
-        text = '30k';
-        break;
-      case 5:
-        text = '50k';
-        break;
-      default:
-        return Container();
-    }
-
-    return Text(text, style: style, textAlign: TextAlign.left);
-  }
-
-  LineChartData mainData() {
     return LineChartData(
       gridData: FlGridData(show: false),
+
       titlesData: FlTitlesData(
-        show: true,
+        show: false,
+
         rightTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
+            showTitles: false,
+            reservedSize: 1,
             interval: 1,
-            getTitlesWidget: bottomTitleWidgets,
+            // getTitlesWidget: bottomTitleWidgets,
           ),
         ),
 
@@ -74,7 +68,7 @@ class MonthlyLineChart extends StatelessWidget {
           sideTitles: SideTitles(
             showTitles: true,
             interval: 1,
-            getTitlesWidget: leftTitleWidgets,
+            // getTitlesWidget: leftTitleWidgets,
             reservedSize: 42,
           ),
         ),
@@ -87,15 +81,21 @@ class MonthlyLineChart extends StatelessWidget {
       maxY: 6,
       lineBarsData: [
         LineChartBarData(
-          spots: const [
-            FlSpot(0, 3),
-            FlSpot(2.6, 2),
-            FlSpot(4.9, 5),
-            FlSpot(6.8, 3.1),
-            FlSpot(8, 4),
-            FlSpot(9.5, 3),
-            FlSpot(11, 4),
-          ],
+          spots: List.generate(dateKeys.length, (index) {
+            final date = dateKeys[index];
+            final int completionValue =
+                monthlyData[date]!['numberOfCompletions'];
+            return FlSpot(index.toDouble(), completionValue.toDouble());
+          }),
+          // spots: const [
+          //   FlSpot(0, 3),
+          //   FlSpot(2.6, 2),
+          //   FlSpot(4.9, 5),
+          //   FlSpot(6.8, 3.1),
+          //   FlSpot(8, 4),
+          //   FlSpot(9.5, 3),
+          //   FlSpot(11, 4),
+          // ],
           isCurved: true,
           color: AppColors.themeBlack,
           barWidth: 2.5,

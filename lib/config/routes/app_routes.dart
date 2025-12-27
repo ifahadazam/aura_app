@@ -1,14 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:life_goal/config/routes/app_route_constants.dart';
 import 'package:life_goal/features/Main/presentation/pages/main_page.dart';
 import 'package:life_goal/features/Settings/presentation/pages/settings_page.dart';
+import 'package:life_goal/features/goals/data/models/habit_model.dart';
 import 'package:life_goal/features/goals/presentation/pages/create_habit.dart';
+import 'package:life_goal/features/goals/presentation/pages/edit_habit_page.dart';
 import 'package:life_goal/features/goals/presentation/pages/goals_page.dart';
 import 'package:life_goal/features/goals/presentation/pages/good_habits.dart';
-import 'package:life_goal/features/paywall/pages/paywall.dart';
 import 'package:life_goal/features/paywall/pages/paywall_page.dart';
-import 'package:life_goal/main.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_goal/welcome/presentation/pages/onboarding_page.dart';
 import 'package:life_goal/welcome/presentation/pages/user_goal_page.dart';
@@ -54,6 +52,15 @@ final appRoutes = <GoRoute>[
         path: 'new_habit',
         builder: (context, state) {
           return const CreateHabit();
+        },
+      ),
+      GoRoute(
+        name: RouteConstants.editHabitsPageName,
+        path: 'edit_habit',
+        builder: (context, state) {
+          HabitModel habit = state.extra as HabitModel;
+
+          return EditHabitPage(habit: habit);
         },
       ),
 

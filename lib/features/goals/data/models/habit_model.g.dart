@@ -25,18 +25,21 @@ class HabitModelAdapter extends TypeAdapter<HabitModel> {
       isDone: fields[5] as bool,
       reminderDays: (fields[6] as List).cast<int>(),
       reminderTime: fields[7] as String,
-      habitColor: fields[8] as String,
+      habitColor: fields[8] as int,
       habitKey: fields[9] as String,
-      habitType: fields[10] as String,
-      currentStreak: fields[11] as int?,
-      bestStreak: fields[12] as int?,
+      currentStreak: fields[10] as int?,
+      bestStreak: fields[11] as int?,
+      completionRate: fields[15] as double?,
+      totalCompletedDays: fields[13] as int?,
+      totalSkippedDays: fields[14] as int?,
+      totalTrackedDays: fields[12] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, HabitModel obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(16)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -58,11 +61,17 @@ class HabitModelAdapter extends TypeAdapter<HabitModel> {
       ..writeByte(9)
       ..write(obj.habitKey)
       ..writeByte(10)
-      ..write(obj.habitType)
-      ..writeByte(11)
       ..write(obj.currentStreak)
+      ..writeByte(11)
+      ..write(obj.bestStreak)
       ..writeByte(12)
-      ..write(obj.bestStreak);
+      ..write(obj.totalTrackedDays)
+      ..writeByte(13)
+      ..write(obj.totalCompletedDays)
+      ..writeByte(14)
+      ..write(obj.totalSkippedDays)
+      ..writeByte(15)
+      ..write(obj.completionRate);
   }
 
   @override

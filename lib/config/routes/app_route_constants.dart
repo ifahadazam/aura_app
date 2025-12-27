@@ -9,4 +9,5 @@ class RouteConstants {
   static const onboardingPageName = 'onboarding';
   static const userGoalPageName = 'user_goal';
   static const paywallPageName = 'paywall';
+  static const editHabitsPageName = 'edit_habit';
 }

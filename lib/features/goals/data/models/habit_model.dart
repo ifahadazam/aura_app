@@ -31,27 +31,27 @@ class HabitModel extends HiveObject {
   final String reminderTime;
 
   @HiveField(8)
-  final String habitColor;
+  final int habitColor; //it is the index of the List in which the colors are present
 
   @HiveField(9)
   final String habitKey;
 
-  @HiveField(10)
-  final String habitType;
+  // @HiveField(10)
+  // final String habitType;
 
-  @HiveField(11)
+  @HiveField(10)
   final int? currentStreak;
 
-  @HiveField(12)
+  @HiveField(11)
   final int? bestStreak;
 
-  @HiveField(13)
+  @HiveField(12)
   final int? totalTrackedDays;
 
-  @HiveField(14)
+  @HiveField(13)
   final int? totalCompletedDays;
 
-  @HiveField(15)
+  @HiveField(14)
   final int? totalSkippedDays;
 
   @HiveField(15)
@@ -68,7 +68,7 @@ class HabitModel extends HiveObject {
     required this.reminderTime,
     required this.habitColor,
     required this.habitKey,
-    required this.habitType,
+    //  required this.habitType,
     this.currentStreak = 0,
     this.bestStreak = 0,
     this.completionRate = 0.0,
@@ -86,9 +86,9 @@ class HabitModel extends HiveObject {
     bool? isDone,
     List<int>? reminderDays,
     String? reminderTime,
-    String? habitColor,
+    int? habitColor,
     String? habitKey,
-    String? habitType,
+    //String? habitType,
     int? currentStreak,
     int? bestStreak,
     int? totalTrackedDays,
@@ -107,7 +107,7 @@ class HabitModel extends HiveObject {
       reminderTime: reminderTime ?? this.reminderTime,
       habitColor: habitColor ?? this.habitColor,
       habitKey: habitKey ?? this.habitKey,
-      habitType: habitType ?? this.habitType,
+      // habitType: habitType ?? this.habitType,
       currentStreak: currentStreak ?? this.currentStreak,
       bestStreak: bestStreak ?? this.bestStreak,
       totalCompletedDays: totalCompletedDays ?? this.totalCompletedDays,

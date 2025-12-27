@@ -28,10 +28,11 @@ void main() async {
   await Hive.openBox(HiveConstants.habitValueBox);
   await Hive.openBox<HabitModel>(HiveConstants.habitsBox);
   await Hive.openBox(HiveConstants.unitValuesBox);
-  await Hive.openBox(HiveConstants.habitReminderBox);
+  // await Hive.openBox(HiveConstants.habitReminderBox);
   await Hive.openBox(HiveConstants.futureGoalBox);
   await Hive.openBox(HiveConstants.userPointsBox);
   await Hive.openBox(HiveConstants.habitStatsBox);
+  await Hive.openBox(HiveConstants.temporaryBuffer);
   runApp(const MyApp());
 }
 

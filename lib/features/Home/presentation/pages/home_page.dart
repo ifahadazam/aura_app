@@ -12,6 +12,8 @@ import 'package:life_goal/core/constants/app_constants.dart';
 import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/Home/presentation/widgets/calender_widget.dart';
 import 'package:life_goal/features/Home/presentation/widgets/circular_graph.dart';
+import 'package:life_goal/features/goals/data/models/habit_model.dart';
+import 'package:life_goal/features/goals/data/services/habit_stats_service.dart';
 
 String userLevel(int totalPoints) {
   if (totalPoints >= 0 && totalPoints < l1) {
@@ -197,8 +199,6 @@ class HomePage extends StatelessWidget {
                     0;
                 final int pendingHabitsToday =
                     habitCount - completedHabitsToday;
-                final bool areAllTasksCompleted =
-                    pendingTasksCount == completedTasksCount;
 
                 //  final int pendingHabitsToday = 0;
 
@@ -223,130 +223,142 @@ class HomePage extends StatelessWidget {
                     : Column(
                         children: [
                           if (pendingTasks != 0)
-                            Container(
-                              width: double.infinity,
-                              height: 60,
-                              padding: AppConstants.widgetInternalPadding,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppColors.lightGreyColor,
+                            InkWell(
+                              onTap: () {
+                                context.pushNamed(RouteConstants.tasksPageName);
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                height: 60,
+                                padding: AppConstants.widgetInternalPadding,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.lightGreyColor,
+                                  ),
+                                  color: AppColors.themeWhite,
+                                  borderRadius: AppConstants.widgetBorderRadius,
                                 ),
-                                color: AppColors.themeWhite,
-                                borderRadius: AppConstants.widgetBorderRadius,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    height: 40,
-                                    width: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius:
-                                          AppConstants.widgetMediumBorderRadius,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        HugeIcons.strokeRoundedTarget02,
-                                        color: AppColors.themeBlack,
-                                        size: 19,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      height: 40,
+                                      width: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: AppConstants
+                                            .widgetMediumBorderRadius,
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          HugeIcons.strokeRoundedTarget02,
+                                          color: AppColors.themeBlack,
+                                          size: 19,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  AppConstants.singleWidth,
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'You have $pendingTasks tasks pending',
-                                          style:
-                                              TypographyTheme.simpleTitleStyle(
-                                                fontSize: 14,
-                                              ),
-                                        ),
+                                    AppConstants.singleWidth,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'You have $pendingTasks tasks pending',
+                                            style:
+                                                TypographyTheme.simpleTitleStyle(
+                                                  fontSize: 14,
+                                                ),
+                                          ),
 
-                                        Text(
-                                          textAlign: TextAlign.center,
-                                          'Take Action..',
-                                          style:
-                                              TypographyTheme.simpleSubTitleStyle(
-                                                fontSize: 13,
-                                              ),
-                                        ),
-                                      ],
+                                          Text(
+                                            textAlign: TextAlign.center,
+                                            'Take Action..',
+                                            style:
+                                                TypographyTheme.simpleSubTitleStyle(
+                                                  fontSize: 13,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: AppColors.themeBlack,
-                                    size: 22,
-                                  ),
-                                ],
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: AppColors.themeBlack,
+                                      size: 22,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           AppConstants.defaultSpace,
                           if (pendingHabitsToday != 0)
-                            Container(
-                              height: 60,
-                              width: double.infinity,
-                              padding: AppConstants.widgetInternalPadding,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppColors.lightGreyColor,
+                            InkWell(
+                              onTap: () {
+                                context.pushNamed(
+                                  RouteConstants.goodHabitsPageName,
+                                );
+                              },
+                              child: Container(
+                                height: 60,
+                                width: double.infinity,
+                                padding: AppConstants.widgetInternalPadding,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.lightGreyColor,
+                                  ),
+                                  color: AppColors.themeWhite,
+                                  borderRadius: AppConstants.widgetBorderRadius,
                                 ),
-                                color: AppColors.themeWhite,
-                                borderRadius: AppConstants.widgetBorderRadius,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    height: 40,
-                                    width: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius:
-                                          AppConstants.widgetMediumBorderRadius,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        HugeIcons.strokeRoundedMedal05,
-                                        color: AppColors.themeBlack,
-                                        size: 19,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      height: 40,
+                                      width: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: AppConstants
+                                            .widgetMediumBorderRadius,
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          HugeIcons.strokeRoundedMedal05,
+                                          color: AppColors.themeBlack,
+                                          size: 19,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  AppConstants.singleWidth,
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '$pendingHabitsToday Habits Needs Action',
-                                          style:
-                                              TypographyTheme.simpleTitleStyle(
-                                                fontSize: 14,
-                                              ),
-                                        ),
+                                    AppConstants.singleWidth,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '$pendingHabitsToday Habits Needs Action',
+                                            style:
+                                                TypographyTheme.simpleTitleStyle(
+                                                  fontSize: 14,
+                                                ),
+                                          ),
 
-                                        Text(
-                                          textAlign: TextAlign.center,
-                                          'Get Started Now',
-                                          style:
-                                              TypographyTheme.simpleSubTitleStyle(
-                                                fontSize: 13,
-                                              ),
-                                        ),
-                                      ],
+                                          Text(
+                                            textAlign: TextAlign.center,
+                                            'Get Started Now',
+                                            style:
+                                                TypographyTheme.simpleSubTitleStyle(
+                                                  fontSize: 13,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: AppColors.themeBlack,
-                                    size: 22,
-                                  ),
-                                ],
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: AppColors.themeBlack,
+                                      size: 22,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -516,83 +528,113 @@ class HabitsNGoalsWidget extends StatelessWidget {
             ),
           ),
           AppConstants.singleWidth,
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  useSafeArea: true,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.white,
-                  builder: (context) => Wrap(children: [VerticalStreakSheet()]),
-                );
-              },
-              child: Container(
-                height: double.maxFinite,
-                padding: EdgeInsets.all(AppConstants.kMediumPadding),
-                decoration: BoxDecoration(
-                  borderRadius: AppConstants.widgetBorderRadius,
-                  color: AppColors.themeWhite,
-                  border: Border.all(color: AppColors.lightGreyColor),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+          ValueListenableBuilder(
+            valueListenable: Hive.box<HabitModel>(
+              HiveConstants.habitsBox,
+            ).listenable(),
+            builder: (context, allHabits, child) {
+              final habits = allHabits.values.toList();
+              int maxCurrentStreak = allHabits.isEmpty
+                  ? 0
+                  : habits
+                        .map((h) => h.currentStreak!)
+                        .reduce((a, b) => a > b ? a : b);
+              int maxBestStreak = allHabits.isEmpty
+                  ? 0
+                  : habits
+                        .map((h) => h.bestStreak!)
+                        .reduce((a, b) => a > b ? a : b);
+
+              List<int> result = List.generate(
+                40,
+                (index) => index < maxBestStreak ? 1 : 0,
+              );
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      useSafeArea: true,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.white,
+                      builder: (context) => Wrap(
+                        children: [
+                          VerticalStreakSheet(
+                            bestStreak: maxBestStreak,
+                            currentStreak: maxCurrentStreak,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: double.maxFinite,
+                    padding: EdgeInsets.all(AppConstants.kMediumPadding),
+                    decoration: BoxDecoration(
+                      borderRadius: AppConstants.widgetBorderRadius,
+                      color: AppColors.themeWhite,
+                      border: Border.all(color: AppColors.lightGreyColor),
+                    ),
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              textAlign: TextAlign.start,
+                              maxBestStreak.toString(),
+                              style: TypographyTheme.simpleTitleStyle(
+                                fontSize: 16,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_outward_sharp,
+                              color: AppColors.themeBlack,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+
                         Text(
                           textAlign: TextAlign.start,
-                          '05',
-                          style: TypographyTheme.simpleTitleStyle(fontSize: 16),
+                          'Streak',
+                          style: TypographyTheme.simpleSubTitleStyle(
+                            fontSize: 13,
+                          ),
                         ),
-                        Icon(
-                          Icons.arrow_outward_sharp,
-                          color: AppColors.themeBlack,
-                          size: 16,
+                        AppConstants.defaultSpace,
+                        SizedBox(
+                          width: double.maxFinite,
+                          height: 60,
+                          child: GridView.builder(
+                            itemCount: result.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 8,
+                                  mainAxisSpacing: 3,
+                                  crossAxisSpacing: 3,
+                                ),
+
+                            itemBuilder: (context, index) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: result[index] == 1
+                                      ? AppColors.themeBlack
+                                      : AppColors.lightGreyColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-
-                    Text(
-                      textAlign: TextAlign.start,
-                      'Streak',
-                      style: TypographyTheme.simpleSubTitleStyle(fontSize: 13),
-                    ),
-                    AppConstants.defaultSpace,
-                    SizedBox(
-                      width: double.maxFinite,
-                      height: 60,
-                      child: GridView.builder(
-                        itemCount: 40,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 8,
-                          mainAxisSpacing: 3,
-                          crossAxisSpacing: 3,
-                        ),
-
-                        itemBuilder: (context, index) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color:
-                                  index == 17 ||
-                                      index == 18 ||
-                                      index == 19 ||
-                                      index == 20 ||
-                                      index == 21
-                                  ? AppColors.themeBlack
-                                  : AppColors.lightGreyColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -662,11 +704,26 @@ class FutureGoalWidget extends StatelessWidget {
   }
 }
 
+String dateTimeToString(DateTime date) {
+  final year = date.year.toString();
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+
+  return "$year-$month-$day";
+}
+
 class VerticalStreakSheet extends StatelessWidget {
-  const VerticalStreakSheet({super.key});
+  const VerticalStreakSheet({
+    super.key,
+    required this.bestStreak,
+    required this.currentStreak,
+  });
+  final int bestStreak;
+  final int currentStreak;
 
   @override
   Widget build(BuildContext context) {
+    final habitStats = HabitStatsService();
     int year = DateTime.now().year;
 
     /// Generate ALL days of the year continuously
@@ -683,18 +740,18 @@ class VerticalStreakSheet extends StatelessWidget {
       (i) => DateFormat.MMM().format(DateTime(year, i + 1)),
     );
 
-    Color getColor(DateTime date) {
-      switch (date.day % 4) {
-        case 1:
-          return Colors.grey.shade600;
-        case 2:
-          return Colors.grey.shade800;
-        case 3:
-          return Colors.black;
-        default:
-          return Colors.grey.shade300;
-      }
-    }
+    // Color getColor(DateTime date) {
+    //   switch (date.day % 4) {
+    //     case 1:
+    //       return Colors.grey.shade600;
+    //     case 2:
+    //       return Colors.grey.shade800;
+    //     case 3:
+    //       return Colors.black;
+    //     default:
+    //       return Colors.grey.shade300;
+    //   }
+    // }
 
     /// Split entire year into rows of 15 blocks
     List<List<DateTime>> rows = [];
@@ -710,7 +767,7 @@ class VerticalStreakSheet extends StatelessWidget {
         children: [
           AppConstants.defaultDoubleSpace,
           Text(
-            '24',
+            currentStreak.toString(),
             style: TypographyTheme.simpleTitleStyle(
               fontSize: 50,
             ).copyWith(height: 1),
@@ -719,6 +776,7 @@ class VerticalStreakSheet extends StatelessWidget {
             'Current Streak',
             style: TypographyTheme.simpleTitleStyle(fontSize: 18),
           ),
+
           Text(
             'You are doing great work.',
             style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
@@ -746,29 +804,60 @@ class VerticalStreakSheet extends StatelessWidget {
                       .toList(),
                 ),
               ),
-              AppConstants.doubleWidth,
+              // AppConstants.doubleWidth,
 
               /// RIGHT SIDE: ALL DAYS BLOCKS
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: rows.map((row) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: row.map((date) {
-                        return Container(
-                          width: 12,
-                          height: 12,
-                          margin: const EdgeInsets.only(right: 3, bottom: 3),
-                          decoration: BoxDecoration(
-                            color: getColor(date),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box(
+                    HiveConstants.habitValueBox,
+                  ).listenable(),
+                  builder: (context, habitValues, child) {
+                    return ValueListenableBuilder(
+                      valueListenable: Hive.box(
+                        HiveConstants.unitValuesBox,
+                      ).listenable(),
+                      builder: (context, unitValues, child) {
+                        final totalHaitCount =
+                            unitValues.get(HiveConstants.totalHabitCount) ?? 0;
+                        final habitCompletionPerDate = habitStats
+                            .getCompletionsPerDate(habitsBox: habitValues);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: rows.map((row) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: row.map((date) {
+                                final dateKey = dateTimeToString(date);
+                                final completionCount =
+                                    habitCompletionPerDate[dateKey] ?? 0;
+                                final colorValue =
+                                    completionCount / totalHaitCount;
+                                final colorIntensity = colorValue * 255;
+                                return Container(
+                                  width: 12,
+                                  height: 12,
+                                  margin: const EdgeInsets.only(
+                                    right: 3,
+                                    bottom: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: completionCount > 0
+                                        ? AppColors.themeBlack.withAlpha(
+                                            colorIntensity.toInt(),
+                                          )
+                                        : AppColors.themeBlack.withAlpha(50),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                );
+                              }).toList(),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     );
-                  }).toList(),
+                  },
                 ),
               ),
             ],

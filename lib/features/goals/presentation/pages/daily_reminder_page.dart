@@ -29,7 +29,7 @@ class _DailyReminderPageState extends State<DailyReminderPage> {
     if (time != null && mounted) {
       selectedTime = time.format(context);
       await Hive.box(
-        HiveConstants.habitReminderBox,
+        HiveConstants.temporaryBuffer,
       ).put(HiveConstants.reminderTime, selectedTime);
     }
   }
@@ -45,9 +45,7 @@ class _DailyReminderPageState extends State<DailyReminderPage> {
       body: Padding(
         padding: AppConstants.pagesInternalPadding,
         child: ValueListenableBuilder(
-          valueListenable: Hive.box(
-            HiveConstants.habitReminderBox,
-          ).listenable(),
+          valueListenable: Hive.box(HiveConstants.temporaryBuffer).listenable(),
           builder: (context, reminderBox, child) {
             final List<int> selectedDays =
                 reminderBox.get(HiveConstants.reminderDays) ?? [];
@@ -76,14 +74,14 @@ class _DailyReminderPageState extends State<DailyReminderPage> {
                           if (selectedDays.contains(weekDaysNumber[index])) {
                             selectedDays.remove(weekDaysNumber[index]);
                             await Hive.box(
-                              HiveConstants.habitReminderBox,
+                              HiveConstants.temporaryBuffer,
                             ).put(HiveConstants.reminderDays, selectedDays);
                             log('SL:$selectedDays');
                             setState(() {});
                           } else {
                             selectedDays.add(weekDaysNumber[index]);
                             await Hive.box(
-                              HiveConstants.habitReminderBox,
+                              HiveConstants.temporaryBuffer,
                             ).put(HiveConstants.reminderDays, selectedDays);
 
                             log('SL:$selectedDays');

@@ -14,6 +14,7 @@ import 'package:life_goal/core/constants/app_constants.dart';
 import 'package:life_goal/core/extensions/sized_box.dart';
 import 'package:life_goal/core/shared/buttons/icon_tap_button.dart';
 import 'package:life_goal/core/shared/internal_page_app_bar.dart';
+import 'package:life_goal/core/shared/new_leveL_unlock_popup.dart';
 import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/habit_model.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +22,7 @@ import 'package:life_goal/features/goals/data/models/habits_values_model.dart';
 import 'package:life_goal/features/goals/data/services/habit_stats_service.dart';
 import 'package:life_goal/features/goals/data/services/task_service.dart';
 import 'package:life_goal/features/goals/presentation/bloc/habit_view_bloc/habit_view_bloc.dart';
+import 'package:life_goal/features/goals/presentation/pages/create_habit.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -345,236 +347,252 @@ class MonthlyStreak extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPositive = habit.habitType.toLowerCase().startsWith('p');
-    return Container(
-      padding: AppConstants.widgetInternalPadding,
+    //  final bool isPositive = habit.habitType.toLowerCase().startsWith('p');
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          useSafeArea: true,
+          isScrollControlled: true,
+          backgroundColor: AppColors.transparentColor,
+          context: context,
+          builder: (context) {
+            return HabitDetailedView(habit: habit);
+          },
+        );
+      },
+      child: Container(
+        padding: AppConstants.widgetInternalPadding,
 
-      width: double.maxFinite,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lightGreyColor),
-        color: AppColors.themeWhite,
-        borderRadius: AppConstants.widgetMediumBorderRadius,
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 40,
-            width: double.maxFinite,
-            child: Row(
-              children: [
-                Container(
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.xtraLightGreyColor,
-                    borderRadius: AppConstants.widetHalfBorderRadius,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      isPositive
-                          ? HugeIcons.strokeRoundedLeaf04
-                          : HugeIcons.strokeRoundedDanger,
-                      color: AppColors.themeBlack,
-                      size: 22,
-                    ),
-                  ),
-                ),
-                AppConstants.singleWidth,
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        habit.title,
-                        style: TypographyTheme.simpleTitleStyle(fontSize: 14),
-                      ),
-                      if (habit.description != '')
-                        Text(
-                          habit.description,
-                          overflow: TextOverflow.ellipsis,
-                          style: TypographyTheme.simpleSubTitleStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                AppConstants.singleWidth,
-
-                ValueListenableBuilder(
-                  valueListenable: Hive.box(
-                    HiveConstants.habitValueBox,
-                  ).listenable(),
-                  builder: (context, valueBox, child) {
-                    final today = DateTime.now();
-                    final formatter = DateFormat('y-M-d');
-                    final String dateToday = formatter.format(today);
-                    final List todaysValueBox = valueBox.get(dateToday) ?? [];
-                    final HabitsValuesModel habitValue = todaysValueBox
-                        .firstWhere(
-                          (val) {
-                            return val.habitKey == habit.key;
-                          },
-                          orElse: () => HabitsValuesModel(
-                            habitKey: habit.key,
-                            habitVlaue: 0,
-                            isHabitCompleted: false,
-                          ),
-                        );
-
-                    return InkWell(
-                      onTap: () async {
-                        final taskService = TaskService();
-                        if (habit.valueCount == 0) {
-                          taskService.completeTodayHabit(
-                            habit,
-                            habitValue,
-                            dateToday,
-                            todaysValueBox,
-                            valueBox,
-                          );
-                        } else {
-                          log('Value Count is greater than Zero');
-                          showModalBottomSheet(
-                            backgroundColor: AppColors.transparentColor,
-                            context: context,
-                            builder: (context) {
-                              return CustomHabitCompletion(
-                                habit: habit,
-                                specificDate: dateToday,
-                              );
-                            },
-                          );
-                        }
-                      },
-
-                      child:
-                          habit.valueCount != 0 &&
-                              habit.valueCount != habitValue.habitVlaue
-                          ? SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  PieChart(
-                                    PieChartData(
-                                      startDegreeOffset: -90,
-                                      sectionsSpace: 0,
-                                      centerSpaceRadius: 12,
-                                      sections: [
-                                        PieChartSectionData(
-                                          value:
-                                              (habitValue.habitVlaue /
-                                              habit.valueCount),
-                                          color: hexToColor(habit.habitColor),
-                                          radius: 5,
-                                          showTitle: false,
-                                        ),
-                                        PieChartSectionData(
-                                          value:
-                                              1 -
-                                              (habitValue.habitVlaue /
-                                                  habit.valueCount),
-                                          color: AppColors.lightGreyColor,
-                                          radius: 5,
-                                          showTitle: false,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.add,
-                                    size: 15,
-                                    color: AppColors.themeBlack,
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: hexToColor(habit.habitColor).withAlpha(
-                                  colorAlphaValue(
-                                    habit.valueCount,
-                                    habitValue.habitVlaue,
-                                  ),
-                                ),
-                                borderRadius:
-                                    AppConstants.widetHalfBorderRadius,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  HugeIcons.strokeRoundedTick02,
-                                  color: AppColors.themeBlack,
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          AppConstants.defaultSpace,
-
-          // Wrap(
-          //   spacing: 5,
-          //   runSpacing: 5,
-          //   children: List.generate(30, (index) {
-          //     return Container(
-          //       height: 18,
-          //       width: 18,
-          //       decoration: BoxDecoration(
-          //         borderRadius: BorderRadius.circular(4),
-          //         color: AppColors.mainColorxLightBlue,
-          //       ),
-          //     );
-          //   }),
-          // ),
-          ValueListenableBuilder(
-            valueListenable: Hive.box(HiveConstants.habitValueBox).listenable(),
-            builder: (context, valueBox, child) {
-              return GridView.count(
-                physics: NeverScrollableScrollPhysics(),
-                crossAxisCount: 16,
-                shrinkWrap: true,
-                crossAxisSpacing: 3,
-                mainAxisSpacing: 3,
-                children: List.generate(getCurrentMonthDateStrings().length, (
-                  index,
-                ) {
-                  final dateKey = getCurrentMonthDateStrings()[index];
-                  final List allValues = valueBox.get(dateKey) ?? [];
-                  final HabitsValuesModel habitValue = allValues.firstWhere(
-                    (val) {
-                      return val.habitKey == habit.key;
-                    },
-                    orElse: () => HabitsValuesModel(
-                      habitKey: habit.key,
-                      habitVlaue: 0,
-                      isHabitCompleted: false,
-                    ),
-                  );
-                  return Container(
+        width: double.maxFinite,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.lightGreyColor),
+          color: AppColors.themeWhite,
+          borderRadius: AppConstants.widgetMediumBorderRadius,
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 40,
+              width: double.maxFinite,
+              child: Row(
+                children: [
+                  Container(
+                    height: 40,
+                    width: 40,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: hexToColor(habit.habitColor).withAlpha(
-                        colorAlphaValue(
-                          habit.valueCount,
-                          habitValue.habitVlaue,
-                        ),
+                      color: AppColors.xtraLightGreyColor,
+                      borderRadius: AppConstants.widetHalfBorderRadius,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        HugeIcons.strokeRoundedLeaf04,
+                        color: AppColors.themeBlack,
+                        size: 22,
                       ),
                     ),
-                  );
-                }),
-              );
-            },
-          ),
-        ],
+                  ),
+                  AppConstants.singleWidth,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          habit.title,
+                          style: TypographyTheme.simpleTitleStyle(fontSize: 14),
+                        ),
+                        if (habit.description != '')
+                          Text(
+                            habit.description,
+                            overflow: TextOverflow.ellipsis,
+                            style: TypographyTheme.simpleSubTitleStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  AppConstants.singleWidth,
+
+                  ValueListenableBuilder(
+                    valueListenable: Hive.box(
+                      HiveConstants.habitValueBox,
+                    ).listenable(),
+                    builder: (context, valueBox, child) {
+                      final today = DateTime.now();
+                      final formatter = DateFormat('y-M-d');
+                      final String dateToday = formatter.format(today);
+                      final List todaysValueBox = valueBox.get(dateToday) ?? [];
+                      final HabitsValuesModel habitValue = todaysValueBox
+                          .firstWhere(
+                            (val) {
+                              return val.habitKey == habit.key;
+                            },
+                            orElse: () => HabitsValuesModel(
+                              habitKey: habit.key,
+                              habitVlaue: 0,
+                              isHabitCompleted: false,
+                            ),
+                          );
+
+                      return InkWell(
+                        onTap: () async {
+                          final taskService = TaskService();
+                          if (habit.valueCount == 0) {
+                            taskService.completeTodayHabit(
+                              habit,
+                              habitValue,
+                              dateToday,
+                              todaysValueBox,
+                              valueBox,
+                            );
+                          } else {
+                            log('Value Count is greater than Zero');
+                            showModalBottomSheet(
+                              backgroundColor: AppColors.transparentColor,
+                              context: context,
+                              builder: (context) {
+                                return CustomHabitCompletion(
+                                  habit: habit,
+                                  specificDate: dateToday,
+                                );
+                              },
+                            );
+                          }
+                        },
+
+                        child:
+                            habit.valueCount != 0 &&
+                                habit.valueCount != habitValue.habitVlaue
+                            ? SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    PieChart(
+                                      PieChartData(
+                                        startDegreeOffset: -90,
+                                        sectionsSpace: 0,
+                                        centerSpaceRadius: 12,
+                                        sections: [
+                                          PieChartSectionData(
+                                            value:
+                                                (habitValue.habitVlaue /
+                                                habit.valueCount),
+                                            color:
+                                                selectableColors[habit
+                                                    .habitColor],
+                                            radius: 5,
+                                            showTitle: false,
+                                          ),
+                                          PieChartSectionData(
+                                            value:
+                                                1 -
+                                                (habitValue.habitVlaue /
+                                                    habit.valueCount),
+                                            color: AppColors.lightGreyColor,
+                                            radius: 5,
+                                            showTitle: false,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.add,
+                                      size: 15,
+                                      color: AppColors.themeBlack,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(
+                                height: 40,
+                                width: 40,
+                                decoration: BoxDecoration(
+                                  color: selectableColors[habit.habitColor]
+                                      .withAlpha(
+                                        colorAlphaValue(
+                                          habit.valueCount,
+                                          habitValue.habitVlaue,
+                                        ),
+                                      ),
+                                  borderRadius:
+                                      AppConstants.widetHalfBorderRadius,
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    HugeIcons.strokeRoundedTick02,
+                                    color: AppColors.themeBlack,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            AppConstants.defaultSpace,
+
+            // Wrap(
+            //   spacing: 5,
+            //   runSpacing: 5,
+            //   children: List.generate(30, (index) {
+            //     return Container(
+            //       height: 18,
+            //       width: 18,
+            //       decoration: BoxDecoration(
+            //         borderRadius: BorderRadius.circular(4),
+            //         color: AppColors.mainColorxLightBlue,
+            //       ),
+            //     );
+            //   }),
+            // ),
+            ValueListenableBuilder(
+              valueListenable: Hive.box(
+                HiveConstants.habitValueBox,
+              ).listenable(),
+              builder: (context, valueBox, child) {
+                return GridView.count(
+                  physics: NeverScrollableScrollPhysics(),
+                  crossAxisCount: 16,
+                  shrinkWrap: true,
+                  crossAxisSpacing: 3,
+                  mainAxisSpacing: 3,
+                  children: List.generate(getCurrentMonthDateStrings().length, (
+                    index,
+                  ) {
+                    final dateKey = getCurrentMonthDateStrings()[index];
+                    final List allValues = valueBox.get(dateKey) ?? [];
+                    final HabitsValuesModel habitValue = allValues.firstWhere(
+                      (val) {
+                        return val.habitKey == habit.key;
+                      },
+                      orElse: () => HabitsValuesModel(
+                        habitKey: habit.key,
+                        habitVlaue: 0,
+                        isHabitCompleted: false,
+                      ),
+                    );
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: selectableColors[habit.habitColor].withAlpha(
+                          colorAlphaValue(
+                            habit.valueCount,
+                            habitValue.habitVlaue,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -592,162 +610,199 @@ class WeeklyHabitStreak extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isHabitValueBinary = habit.valueCount == 0;
-    return Container(
-      padding: AppConstants.widgetInternalPadding,
-      height: 65,
-      width: double.maxFinite,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.lightGreyColor),
-        color: AppColors.themeWhite,
-        borderRadius: AppConstants.widetHalfBorderRadius,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  height: 45,
-                  width: 45,
-                  decoration: BoxDecoration(
-                    color: AppColors.xtraLightGreyColor,
-                    borderRadius: AppConstants.widetHalfBorderRadius,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      HugeIcons.strokeRoundedWatermelon,
-                      color: AppColors.themeBlack,
-                      size: 24,
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          useSafeArea: true,
+          isScrollControlled: true,
+          backgroundColor: AppColors.transparentColor,
+          context: context,
+          builder: (context) {
+            return HabitDetailedView(habit: habit);
+          },
+        );
+      },
+      child: Container(
+        padding: AppConstants.widgetInternalPadding,
+        height: 65,
+        width: double.maxFinite,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.lightGreyColor),
+          color: AppColors.themeWhite,
+          borderRadius: AppConstants.widetHalfBorderRadius,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    height: 45,
+                    width: 45,
+                    decoration: BoxDecoration(
+                      color: AppColors.xtraLightGreyColor,
+                      borderRadius: AppConstants.widetHalfBorderRadius,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        HugeIcons.strokeRoundedWatermelon,
+                        color: AppColors.themeBlack,
+                        size: 24,
+                      ),
                     ),
                   ),
-                ),
 
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ValueListenableBuilder(
-                      valueListenable: Hive.box(
-                        HiveConstants.habitValueBox,
-                      ).listenable(),
-                      builder: (context, valueBox, child) {
-                        return Row(
-                          spacing: 8,
-                          mainAxisAlignment: MainAxisAlignment.start,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ValueListenableBuilder(
+                        valueListenable: Hive.box(
+                          HiveConstants.habitValueBox,
+                        ).listenable(),
+                        builder: (context, valueBox, child) {
+                          return Row(
+                            spacing: 8,
+                            mainAxisAlignment: MainAxisAlignment.start,
 
-                          children: List.generate(7, (index) {
-                            final dateKey =
-                                getCurrentWeekDatesAsStrings()[index];
-                            //  log('The Date Key: $dateKey');
-                            final List allValues = valueBox.get(dateKey) ?? [];
+                            children: List.generate(7, (index) {
+                              final dateKey =
+                                  getCurrentWeekDatesAsStrings()[index];
+                              log('The Date Key: $dateKey');
+                              final List allValues =
+                                  valueBox.get(dateKey) ?? [];
 
-                            // final List todaysValues = valueBox.get(key)
+                              // final List todaysValues = valueBox.get(key)
 
-                            final HabitsValuesModel habitValue = allValues
-                                .firstWhere(
-                                  (val) {
-                                    return val.habitKey == habit.key;
-                                  },
-                                  orElse: () => HabitsValuesModel(
-                                    habitKey: habit.key,
-                                    habitVlaue: 0,
-                                    isHabitCompleted: false,
-                                  ),
-                                );
-
-                            return InkWell(
-                              onTap: () async {
-                                final taskService = TaskService();
-                                final habitStats = HabitStatsService();
-                                if (habit.valueCount == 0) {
-                                  await taskService
-                                      .completeHabit(
-                                        habit,
-                                        habitValue,
-                                        allValues,
-                                        dateKey,
-                                        valueBox,
-                                      )
-                                      .whenComplete(() async {
-                                        await habitStats.calculateHabitStats(
-                                          habitsBox: valueBox,
-                                          allHabits: allHabitsBox,
-                                          habitModel: habit,
-                                        );
-                                      });
-                                } else {
-                                  log('Value Count is greater than Zero');
-                                  showModalBottomSheet(
-                                    backgroundColor: AppColors.transparentColor,
-                                    context: context,
-                                    builder: (context) {
-                                      return CustomHabitCompletion(
-                                        habit: habit,
-                                        specificDate: dateKey,
-                                      );
+                              final HabitsValuesModel habitValue = allValues
+                                  .firstWhere(
+                                    (val) {
+                                      return val.habitKey == habit.key;
                                     },
+                                    orElse: () => HabitsValuesModel(
+                                      habitKey: habit.key,
+                                      habitVlaue: 0,
+                                      isHabitCompleted: false,
+                                    ),
                                   );
-                                }
-                              },
 
-                              child: isHabitValueBinary
-                                  ? Container(
-                                      height: 25,
-                                      width: 25,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(5),
-                                        color: hexToColor(habit.habitColor)
-                                            .withAlpha(
-                                              habitValue.habitVlaue == 1
-                                                  ? 255
-                                                  : 40,
+                              return InkWell(
+                                onTap: () async {
+                                  final taskService = TaskService();
+                                  final habitStats = HabitStatsService();
+                                  if (habit.valueCount == 0) {
+                                    await taskService
+                                        .completeHabit(
+                                          habit,
+                                          habitValue,
+                                          allValues,
+                                          dateKey,
+                                          valueBox,
+                                        )
+                                        .whenComplete(() async {
+                                          await habitStats.calculateHabitStats(
+                                            habitsBox: valueBox,
+                                            allHabits: allHabitsBox,
+                                            habitModel: habit,
+                                          );
+                                          if (habit.currentStreak ==
+                                                  habit.streakGoal &&
+                                              context.mounted) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) {
+                                                return NewLevelUnlockPopup(
+                                                  userName: 'Fahad',
+                                                  badgeTitle: 'Advanced',
+                                                  auraPoints: 2459,
+                                                );
+                                              },
+                                            );
+                                          }
+                                        });
+                                  } else {
+                                    log('Value Count is greater than Zero');
+                                    showModalBottomSheet(
+                                      backgroundColor:
+                                          AppColors.transparentColor,
+                                      context: context,
+                                      builder: (context) {
+                                        return CustomHabitCompletion(
+                                          habit: habit,
+                                          specificDate: dateKey,
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+
+                                child: isHabitValueBinary
+                                    ? Container(
+                                        height: 25,
+                                        width: 25,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            5,
+                                          ),
+                                          color:
+                                              selectableColors[habit.habitColor]
+                                                  .withAlpha(
+                                                    habitValue.habitVlaue == 1
+                                                        ? 255
+                                                        : 40,
+                                                  ),
+                                        ),
+                                      )
+                                    : Container(
+                                        height: 25,
+                                        width: 25,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            5,
+                                          ),
+                                          color:
+                                              selectableColors[habit.habitColor]
+                                                  .withAlpha(50),
+                                        ),
+                                        child: FractionallySizedBox(
+                                          alignment: Alignment.bottomCenter,
+                                          widthFactor: 1,
+                                          heightFactor:
+                                              habitValue.habitVlaue /
+                                              habit.valueCount,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                              color:
+                                                  selectableColors[habit
+                                                      .habitColor],
                                             ),
-                                      ),
-                                    )
-                                  : Container(
-                                      height: 25,
-                                      width: 25,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(5),
-                                        color: hexToColor(
-                                          habit.habitColor,
-                                        ).withAlpha(50),
-                                      ),
-                                      child: FractionallySizedBox(
-                                        alignment: Alignment.bottomCenter,
-                                        widthFactor: 1,
-                                        heightFactor:
-                                            habitValue.habitVlaue /
-                                            habit.valueCount,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              5,
-                                            ),
-                                            color: hexToColor(habit.habitColor),
                                           ),
                                         ),
                                       ),
-                                    ),
-                            );
-                          }),
-                        );
-                      },
-                    ),
-                    2.height,
-                    Text(
-                      habit.title,
-                      style: TypographyTheme.simpleSubTitleStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
+                              );
+                            }),
+                          );
+                        },
+                      ),
+                      2.height,
+                      Text(
+                        habit.title,
+                        style: TypographyTheme.simpleSubTitleStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -835,7 +890,7 @@ class CustomHabitCompletion extends StatelessWidget {
                     width: double.maxFinite,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: hexToColor(habit.habitColor).withAlpha(40),
+                      color: selectableColors[habit.habitColor].withAlpha(40),
                       borderRadius: AppConstants.widetHalfBorderRadius,
                     ),
                     child: FractionallySizedBox(
@@ -844,7 +899,7 @@ class CustomHabitCompletion extends StatelessWidget {
                       heightFactor: 1,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: hexToColor(habit.habitColor),
+                          color: selectableColors[habit.habitColor],
                           borderRadius: AppConstants.widetHalfBorderRadius,
                         ),
                       ),
@@ -1174,7 +1229,9 @@ class YearlyHabitStreak extends StatelessWidget {
                                             value:
                                                 (habitValue.habitVlaue /
                                                 habit.valueCount),
-                                            color: hexToColor(habit.habitColor),
+                                            color:
+                                                selectableColors[habit
+                                                    .habitColor],
                                             radius: 5,
                                             showTitle: false,
                                           ),
@@ -1202,12 +1259,13 @@ class YearlyHabitStreak extends StatelessWidget {
                                 height: 40,
                                 width: 40,
                                 decoration: BoxDecoration(
-                                  color: hexToColor(habit.habitColor).withAlpha(
-                                    colorAlphaValue(
-                                      habit.valueCount,
-                                      habitValue.habitVlaue,
-                                    ),
-                                  ),
+                                  color: selectableColors[habit.habitColor]
+                                      .withAlpha(
+                                        colorAlphaValue(
+                                          habit.valueCount,
+                                          habitValue.habitVlaue,
+                                        ),
+                                      ),
                                   borderRadius:
                                       AppConstants.widetHalfBorderRadius,
                                 ),
@@ -1280,7 +1338,7 @@ class YearlyGridView extends StatelessWidget {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: hexToColor(habit.habitColor).withAlpha(
+                  color: selectableColors[habit.habitColor].withAlpha(
                     colorAlphaValue(habit.valueCount, habitValue.habitVlaue),
                   ),
                   borderRadius: BorderRadius.circular(2),
@@ -1381,7 +1439,7 @@ class HabitDetailedView extends StatelessWidget {
                 ),
               ),
               AppConstants.defaultSpace,
-              YearlyGridView(paddedDates: paddedDates, habit: habit),
+              //   YearlyGridView(paddedDates: paddedDates, habit: habit),
               AppConstants.defaultSpace,
 
               Row(
@@ -1400,7 +1458,7 @@ class HabitDetailedView extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          '17',
+                          habit.streakGoal.toString(),
                           style: TypographyTheme.simpleSubTitleStyle(
                             fontSize: 13,
                           ),
@@ -1415,19 +1473,27 @@ class HabitDetailedView extends StatelessWidget {
                     ),
                   ),
 
-                  Container(
-                    height: 28,
-                    width: 28,
-                    decoration: BoxDecoration(
-                      color: AppColors.themeWhite,
-                      borderRadius: AppConstants.widetHalfBorderRadius,
-                      border: Border.all(color: AppColors.lightGreyColor),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.edit,
-                        color: AppColors.themeBlack,
-                        size: 17,
+                  InkWell(
+                    onTap: () {
+                      context.pushNamed(
+                        RouteConstants.editHabitsPageName,
+                        extra: habit,
+                      );
+                    },
+                    child: Container(
+                      height: 28,
+                      width: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.themeWhite,
+                        borderRadius: AppConstants.widetHalfBorderRadius,
+                        border: Border.all(color: AppColors.lightGreyColor),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.edit,
+                          color: AppColors.themeBlack,
+                          size: 17,
+                        ),
                       ),
                     ),
                   ),
@@ -1439,7 +1505,7 @@ class HabitDetailedView extends StatelessWidget {
                 child: SizedBox(height: 0.7, width: double.maxFinite),
               ),
               AppConstants.defaultDoubleSpace,
-              HabitCalenderView(habitColor: hexToColor(habit.habitColor)),
+              HabitCalenderView(habitColor: selectableColors[habit.habitColor]),
             ],
           ),
         ),

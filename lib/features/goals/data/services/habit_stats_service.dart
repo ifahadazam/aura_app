@@ -361,4 +361,218 @@ class HabitStatsService {
       ),
     );
   }
+
+  // Stats for the Graphs
+  //* Weekly (Past 7 Days Habits Completion Count indcluding current day)
+  Map<String, Map<String, dynamic>> getLast7DaysHabitCompletion({
+    required Box habitsBox,
+  }) {
+    final Map<String, Map<String, dynamic>> result = {};
+
+    // ✅ Format: yyyy-MM-dd
+    String formatDate(DateTime date) {
+      final y = date.year.toString();
+      final m = date.month.toString().padLeft(2, '0');
+      final d = date.day.toString().padLeft(2, '0');
+      return "$y-$m-$d";
+    }
+
+    const weekdays = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ];
+
+    final today = DateTime.now();
+
+    for (int i = 0; i < 7; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey = formatDate(date);
+      final dayName = weekdays[date.weekday - 1];
+
+      // Read list from Hive using date key
+      final List habitsForDay = (habitsBox.get(dateKey)) ?? [];
+
+      // Count completed habits
+      final completedCount = habitsForDay
+          .where((habit) => habit.isHabitCompleted)
+          .length;
+
+      result[dayName] = {
+        "date": dateKey,
+        "numberOfCompletions": completedCount,
+      };
+    }
+
+    return result;
+  }
+
+  //* Weekly (Current Week Habits Completion Count (Monday --> Sunday))
+  Map<String, Map<String, dynamic>> getCurrentWeekHabitCompletion({
+    required Box habitsBox,
+  }) {
+    final Map<String, Map<String, dynamic>> result = {};
+
+    // yyyy-MM-dd formatter
+    String formatDate(DateTime date) {
+      final y = date.year.toString();
+      final m = date.month.toString().padLeft(2, '0');
+      final d = date.day.toString().padLeft(2, '0');
+      return "$y-$m-$d";
+    }
+
+    const weekdays = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ];
+
+    final today = DateTime.now();
+
+    // 🔹 Find Monday of the current week
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+
+    // 🔹 Loop from Monday → Sunday
+    for (int i = 0; i < 7; i++) {
+      final date = monday.add(Duration(days: i));
+      final dateKey = formatDate(date);
+      final dayName = weekdays[date.weekday - 1];
+
+      // Read list from Hive using date key
+      final List habitsForDay = habitsBox.get(dateKey) ?? [];
+
+      // Count completed habits
+      final completedCount = habitsForDay
+          .where((habit) => habit.isHabitCompleted)
+          .length;
+
+      result[dayName] = {
+        "date": dateKey,
+        "numberOfCompletions": completedCount,
+      };
+    }
+
+    return result;
+  }
+
+  //* Monthly (Past 28 Days Including today --> Habit Completion Count)
+  Map<String, Map<String, dynamic>> getLast28DaysHabitCompletion({
+    required Box habitsBox,
+  }) {
+    final Map<String, Map<String, dynamic>> result = {};
+
+    String formatDate(DateTime date) {
+      final y = date.year.toString();
+      final m = date.month.toString().padLeft(2, '0');
+      final d = date.day.toString().padLeft(2, '0');
+      return "$y-$m-$d";
+    }
+
+    final today = DateTime.now();
+    int availableDatesCount = 0;
+
+    for (int i = 0; i < 28; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey = formatDate(date);
+
+      // ✅ Check if date exists in Hive
+      final bool hasDate = habitsBox.containsKey(dateKey);
+      if (hasDate) {
+        availableDatesCount++;
+      }
+
+      final List habitsForDay = habitsBox.get(dateKey) ?? [];
+
+      final completedCount = habitsForDay
+          .where((habit) => habit.isHabitCompleted)
+          .length;
+
+      result[dateKey] = {
+        "date": dateKey,
+        "numberOfCompletions": completedCount,
+      };
+    }
+
+    // 🔴 Condition based on AVAILABLE DATES
+    if (availableDatesCount <= 15) {
+      return {};
+    }
+
+    return result;
+  }
+
+  //* Monthly (Current Month – First 28 Days Habit Completion)
+  Map<String, Map<String, dynamic>> getCurrentMonth28DaysHabitCompletion({
+    required Box habitsBox,
+  }) {
+    final Map<String, Map<String, dynamic>> result = {};
+
+    String formatDate(DateTime date) {
+      final y = date.year.toString();
+      final m = date.month.toString().padLeft(2, '0');
+      final d = date.day.toString().padLeft(2, '0');
+      return "$y-$m-$d";
+    }
+
+    final today = DateTime.now();
+    final firstDayOfMonth = DateTime(today.year, today.month, 1);
+
+    int availableDatesCount = 0;
+
+    for (int i = 0; i < 28; i++) {
+      final date = firstDayOfMonth.add(Duration(days: i));
+      final dateKey = formatDate(date);
+
+      // ✅ Check if date exists in Hive
+      final bool hasDate = habitsBox.containsKey(dateKey);
+      if (hasDate) {
+        availableDatesCount++;
+      }
+
+      final List habitsForDay = habitsBox.get(dateKey) ?? [];
+
+      final completedCount = habitsForDay
+          .where((habit) => habit.isHabitCompleted)
+          .length;
+
+      result[dateKey] = {
+        "date": dateKey,
+        "numberOfCompletions": completedCount,
+      };
+    }
+
+    // 🔴 Condition based on AVAILABLE DATES
+    if (availableDatesCount <= 15) {
+      return {};
+    }
+
+    return result;
+  }
+
+  //Straks
+  Map<String, int> getCompletionsPerDate({required Box habitsBox}) {
+    final Map<String, int> result = {};
+
+    for (final key in habitsBox.keys) {
+      if (key is! String) continue;
+
+      final List habitsForDay = habitsBox.get(key) ?? [];
+
+      final int completedCount = habitsForDay
+          .where((habit) => habit.isHabitCompleted)
+          .length;
+
+      result[key] = completedCount;
+    }
+
+    return result;
+  }
 }
