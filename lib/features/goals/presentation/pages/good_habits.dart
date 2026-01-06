@@ -23,6 +23,7 @@ import 'package:life_goal/features/goals/data/services/habit_stats_service.dart'
 import 'package:life_goal/features/goals/data/services/task_service.dart';
 import 'package:life_goal/features/goals/presentation/bloc/habit_view_bloc/habit_view_bloc.dart';
 import 'package:life_goal/features/goals/presentation/pages/create_habit.dart';
+import 'package:life_goal/features/goals/presentation/pages/edit_habit_page.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -251,9 +252,15 @@ class GoodHabits extends StatelessWidget {
                                       allHabitsBox: allHabitsBox,
                                     );
                                   } else if (view == 'monthly') {
-                                    return MonthlyStreak(habit: eachHbait);
+                                    return MonthlyStreak(
+                                      habit: eachHbait,
+                                      allHabitsBox: allHabitsBox,
+                                    );
                                   } else {
-                                    return YearlyHabitStreak(habit: eachHbait);
+                                    return YearlyHabitStreak(
+                                      habit: eachHbait,
+                                      allHabitsBox: allHabitsBox,
+                                    );
                                   }
                                 },
                               ),
@@ -342,8 +349,13 @@ class GoodHabits extends StatelessWidget {
 }
 
 class MonthlyStreak extends StatelessWidget {
-  const MonthlyStreak({super.key, required this.habit});
+  const MonthlyStreak({
+    super.key,
+    required this.habit,
+    required this.allHabitsBox,
+  });
   final HabitModel habit;
+  final Box allHabitsBox;
 
   @override
   Widget build(BuildContext context) {
@@ -455,6 +467,7 @@ class MonthlyStreak extends StatelessWidget {
                                 return CustomHabitCompletion(
                                   habit: habit,
                                   specificDate: dateToday,
+                                  allHabitsBox: allHabitsBox,
                                 );
                               },
                             );
@@ -704,8 +717,8 @@ class WeeklyHabitStreak extends StatelessWidget {
                                         )
                                         .whenComplete(() async {
                                           await habitStats.calculateHabitStats(
-                                            habitsBox: valueBox,
-                                            allHabits: allHabitsBox,
+                                            habitsValueBox: valueBox,
+                                            allHabitsBox: allHabitsBox,
                                             habitModel: habit,
                                           );
                                           if (habit.currentStreak ==
@@ -730,9 +743,12 @@ class WeeklyHabitStreak extends StatelessWidget {
                                           AppColors.transparentColor,
                                       context: context,
                                       builder: (context) {
+                                        // log('Habit Key: ${habit.habitKey}');
+                                        // return SizedBox();
                                         return CustomHabitCompletion(
                                           habit: habit,
                                           specificDate: dateKey,
+                                          allHabitsBox: allHabitsBox,
                                         );
                                       },
                                     );
@@ -813,13 +829,16 @@ class CustomHabitCompletion extends StatelessWidget {
     super.key,
     required this.habit,
     required this.specificDate,
+    required this.allHabitsBox,
   });
 
   final HabitModel habit;
   final String specificDate;
+  final Box<dynamic> allHabitsBox;
 
   @override
   Widget build(BuildContext context) {
+    final String theHabitKey = habit.key;
     return Container(
       padding: EdgeInsets.all(AppConstants.kMediumPadding),
       margin: EdgeInsets.symmetric(
@@ -834,15 +853,15 @@ class CustomHabitCompletion extends StatelessWidget {
         children: [
           ValueListenableBuilder(
             valueListenable: Hive.box(HiveConstants.habitValueBox).listenable(),
-            builder: (context, valueBox, child) {
-              final List allValues = valueBox.get(specificDate) ?? [];
+            builder: (context, habitsValueBox, child) {
+              final List allValues = habitsValueBox.get(specificDate) ?? [];
 
               final HabitsValuesModel habitValue = allValues.firstWhere(
                 (val) {
-                  return val.habitKey == habit.key;
+                  return val.habitKey == theHabitKey;
                 },
                 orElse: () => HabitsValuesModel(
-                  habitKey: habit.key,
+                  habitKey: theHabitKey,
                   habitVlaue: 0,
                   isHabitCompleted: false,
                 ),
@@ -915,14 +934,23 @@ class CustomHabitCompletion extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () async {
                               final taskService = TaskService();
+                              final habitStats = HabitStatsService();
                               if (habitValue.habitVlaue != 0) {
-                                await taskService.decrementCustomHabit(
-                                  habitValue,
-                                  habit,
-                                  allValues,
-                                  specificDate,
-                                  valueBox,
-                                );
+                                await taskService
+                                    .decrementCustomHabit(
+                                      habitValue,
+                                      habit,
+                                      allValues,
+                                      specificDate,
+                                      habitsValueBox,
+                                    )
+                                    .whenComplete(() async {
+                                      await habitStats.calculateHabitStats(
+                                        habitsValueBox: habitsValueBox,
+                                        allHabitsBox: allHabitsBox,
+                                        habitModel: habit,
+                                      );
+                                    });
                               }
                             },
                             child: Container(
@@ -974,13 +1002,22 @@ class CustomHabitCompletion extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () async {
                               final taskService = TaskService();
-                              await taskService.incrementCustomHabit(
-                                habitValue,
-                                habit,
-                                allValues,
-                                specificDate,
-                                valueBox,
-                              );
+                              final habitStats = HabitStatsService();
+                              await taskService
+                                  .incrementCustomHabit(
+                                    habitValue,
+                                    habit,
+                                    allValues,
+                                    specificDate,
+                                    habitsValueBox,
+                                  )
+                                  .whenComplete(() async {
+                                    await habitStats.calculateHabitStats(
+                                      habitsValueBox: habitsValueBox,
+                                      allHabitsBox: allHabitsBox,
+                                      habitModel: habit,
+                                    );
+                                  });
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1015,13 +1052,22 @@ class CustomHabitCompletion extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () async {
                               final taskService = TaskService();
-                              await taskService.resetCustomHabit(
-                                habitValue,
-                                habit,
-                                allValues,
-                                specificDate,
-                                valueBox,
-                              );
+                              final habitStats = HabitStatsService();
+                              await taskService
+                                  .resetCustomHabit(
+                                    habitValue,
+                                    habit,
+                                    allValues,
+                                    specificDate,
+                                    habitsValueBox,
+                                  )
+                                  .whenComplete(() async {
+                                    await habitStats.calculateHabitStats(
+                                      habitsValueBox: habitsValueBox,
+                                      allHabitsBox: allHabitsBox,
+                                      habitModel: habit,
+                                    );
+                                  });
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1048,13 +1094,22 @@ class CustomHabitCompletion extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () async {
                               final taskService = TaskService();
-                              await taskService.fillCustomHabit(
-                                habitValue,
-                                habit,
-                                allValues,
-                                specificDate,
-                                valueBox,
-                              );
+                              final habitStats = HabitStatsService();
+                              await taskService
+                                  .fillCustomHabit(
+                                    habitValue,
+                                    habit,
+                                    allValues,
+                                    specificDate,
+                                    habitsValueBox,
+                                  )
+                                  .whenComplete(() async {
+                                    await habitStats.calculateHabitStats(
+                                      habitsValueBox: habitsValueBox,
+                                      allHabitsBox: allHabitsBox,
+                                      habitModel: habit,
+                                    );
+                                  });
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -1090,8 +1145,13 @@ class CustomHabitCompletion extends StatelessWidget {
 }
 
 class YearlyHabitStreak extends StatelessWidget {
-  const YearlyHabitStreak({super.key, required this.habit});
+  const YearlyHabitStreak({
+    super.key,
+    required this.habit,
+    required this.allHabitsBox,
+  });
   final HabitModel habit;
+  final Box allHabitsBox;
 
   @override
   Widget build(BuildContext context) {
@@ -1204,6 +1264,7 @@ class YearlyHabitStreak extends StatelessWidget {
                                 return CustomHabitCompletion(
                                   habit: habit,
                                   specificDate: dateToday,
+                                  allHabitsBox: allHabitsBox,
                                 );
                               },
                             );
@@ -1475,9 +1536,15 @@ class HabitDetailedView extends StatelessWidget {
 
                   InkWell(
                     onTap: () {
-                      context.pushNamed(
-                        RouteConstants.editHabitsPageName,
-                        extra: habit,
+                      // context.pushNamed(
+                      //   RouteConstants.editHabitsPageName,
+                      //   extra: habit,
+                      // );
+                      // ?
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => EditHabitPage(habit: habit),
+                        ),
                       );
                     },
                     child: Container(

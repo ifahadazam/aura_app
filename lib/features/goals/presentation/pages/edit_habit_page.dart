@@ -1,8 +1,6 @@
 import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:life_goal/config/themes/typography/typography_theme.dart';
@@ -15,6 +13,7 @@ import 'package:life_goal/core/shared/custom_text_field.dart';
 import 'package:life_goal/core/shared/internal_page_app_bar.dart';
 import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/habit_model.dart';
+import 'package:life_goal/features/goals/data/models/habits_values_model.dart';
 import 'package:life_goal/features/goals/data/services/task_service.dart';
 import 'package:life_goal/features/goals/presentation/pages/create_habit.dart';
 import 'package:life_goal/features/goals/presentation/pages/daily_reminder_page.dart';
@@ -132,7 +131,7 @@ class _EditHabitPageState extends State<EditHabitPage>
                     final streakGoal =
                         tempBox.get('streak_goal') ?? widget.habit.streakGoal;
 
-                    final valueDigit =
+                    final int valueDigit =
                         tempBox.get('custom_val') ?? widget.habit.valueCount;
                     return Column(
                       children: [
@@ -424,11 +423,22 @@ class _EditHabitPageState extends State<EditHabitPage>
                                                 AppConstants.defualtHalfSpace,
                                                 InkWell(
                                                   onTap: () {
+                                                    final reminderDays = widget
+                                                        .habit
+                                                        .reminderDays;
+                                                    final reminderTime = widget
+                                                        .habit
+                                                        .reminderTime;
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (_) =>
-                                                            DailyReminderPage(),
+                                                            DailyReminderPage(
+                                                              reminderDays:
+                                                                  reminderDays,
+                                                              reminderTime:
+                                                                  reminderTime,
+                                                            ),
                                                       ),
                                                     );
                                                   },
@@ -755,7 +765,7 @@ class _EditHabitPageState extends State<EditHabitPage>
                                                                     return EditCustomHabitValue(
                                                                       habitValue: widget
                                                                           .habit
-                                                                          .habitValue
+                                                                          .valueCount
                                                                           .toString(),
                                                                     );
                                                                   },
@@ -824,11 +834,18 @@ class _EditHabitPageState extends State<EditHabitPage>
                 final title = titleController.text.trim();
                 final subTitle = notesController.text.trim();
 
-                final streakDays =
+                //Check Value Type before Updating
+                final isHabitValueCustom =
+                    isValueCustom.value ?? widget.habit.valueCount > 0;
+
+                final int streakDays =
                     Hive.box(
                       HiveConstants.temporaryBuffer,
                     ).get('streak_goal') ??
                     widget.habit.streakGoal;
+                final updatedValueCount =
+                    Hive.box(HiveConstants.temporaryBuffer).get('custom_val') ??
+                    widget.habit.valueCount;
                 final theHabitKey = widget.habit.habitKey;
 
                 log('The Habit Key aferUpdate: $theHabitKey');
@@ -837,7 +854,7 @@ class _EditHabitPageState extends State<EditHabitPage>
                   title: title,
                   description: subTitle,
                   habitValue: widget.habit.habitValue,
-                  valueCount: widget.habit.valueCount,
+                  valueCount: isHabitValueCustom ? updatedValueCount : 0,
                   streakGoal: streakDays,
                   isDone: widget.habit.isDone,
                   reminderDays: widget.habit.reminderDays,
@@ -847,6 +864,55 @@ class _EditHabitPageState extends State<EditHabitPage>
                 );
 
                 await taskService.addNewHabit(updatedHabit);
+
+                //* Now check if the value count is previously Binary and now edited to Custom
+                //* Then Update all completed habit to the full custom value
+
+                if (widget.habit.valueCount == 0) {
+                  //Now The Unedited Habit value count is zero (Means Binary)
+                  // Now check if it is changed to custom
+                  final bool isChangedToCustom =
+                      widget.habit.valueCount != updatedHabit.valueCount;
+
+                  if (isChangedToCustom) {
+                    log('Changed to Custom');
+                    final newHabitValueCount = updatedHabit.valueCount;
+                    taskService.updateAllValues(
+                      widget.habit,
+                      newHabitValueCount,
+                    );
+
+                    //  log('Updated List: $')
+                  }
+                } else {
+                  //Else the Unedited Habit Value is not Binary (It is custom)
+                  final bool isChangedToBinary =
+                      widget.habit.valueCount != updatedHabit.valueCount &&
+                      (updatedHabit.valueCount == 0);
+
+                  final bool isCustomValueVaried =
+                      updatedHabit.valueCount != 0 &&
+                      (updatedHabit.valueCount > 1);
+
+                  log('Updated Value Count: $updatedValueCount');
+
+                  if (isChangedToBinary) {
+                    log('Changed To Binary');
+                    taskService.updateAllValues(widget.habit, 1);
+                  }
+
+                  //if unedited value is custom but the custom value chaned to another custom value
+                  //For example from 10 to 7 or from 5 to 8 then just update all values with the latest one
+                  if (isCustomValueVaried) {
+                    log('Custom Value is Varied');
+                    final newHabitValueCount = updatedHabit.valueCount;
+
+                    taskService.updateAllValues(
+                      widget.habit,
+                      newHabitValueCount,
+                    );
+                  }
+                }
 
                 if (context.mounted) {
                   context.pop();
@@ -878,7 +944,7 @@ class _EditStreakGoalState extends State<EditStreakGoal> {
   void initState() {
     final previousStreak =
         widget.tempBox.get('streak_goal') ?? widget.habit.streakGoal.toString();
-    controller = TextEditingController(text: previousStreak);
+    controller = TextEditingController(text: previousStreak.toString());
     super.initState();
   }
 
@@ -931,7 +997,10 @@ class _EditStreakGoalState extends State<EditStreakGoal> {
         ),
         TextButton(
           onPressed: () {
-            widget.tempBox.put('streak_goal', controller.text.trim());
+            widget.tempBox.put(
+              'streak_goal',
+              int.parse(controller.text.trim()),
+            );
             context.pop();
           },
           child: Text(
@@ -1000,7 +1069,7 @@ class _EditCustomHabitValueState extends State<EditCustomHabitValue> {
           onPressed: () {
             Hive.box(
               HiveConstants.temporaryBuffer,
-            ).put(HiveConstants.valueType, int.parse(controller.text.trim()));
+            ).put('custom_val', int.parse(controller.text.trim()));
             context.pop();
           },
           child: Text(

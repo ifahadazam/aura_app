@@ -53,6 +53,12 @@ const colorRow = [
   // Color(0xFF94A3B8),
 ];
 
+// String theHabitKey() {
+//   final date = DateTime.now();
+//   return '${date.year}-${date.month}-${date.day} '
+//       '${date.hour}:${date.minute}:${date.second}.${date.microsecond}';
+// }
+
 class CreateHabit extends StatefulWidget {
   const CreateHabit({super.key});
 
@@ -440,7 +446,12 @@ class _CreateHabitState extends State<CreateHabit> {
                                                         context,
                                                         MaterialPageRoute(
                                                           builder: (_) =>
-                                                              DailyReminderPage(),
+                                                              DailyReminderPage(
+                                                                reminderDays:
+                                                                    [],
+                                                                reminderTime:
+                                                                    '',
+                                                              ),
                                                         ),
                                                       );
                                                     },

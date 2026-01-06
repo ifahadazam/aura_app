@@ -6,6 +6,7 @@ import 'package:life_goal/core/utils/hive_db/hive_constants.dart';
 import 'package:life_goal/features/goals/data/models/habit_model.dart';
 import 'package:life_goal/features/goals/data/models/habits_values_model.dart';
 import 'package:life_goal/features/goals/data/models/tasks_model.dart';
+import 'package:life_goal/features/goals/data/services/habit_stats_service.dart';
 
 class TaskService {
   TaskService._internal();
@@ -57,40 +58,42 @@ class TaskService {
   }
 
   // Save Pending tasks Count
-  Future<void> savePendingTasksCount() async {
-    final List<TasksModel> allTasks = Hive.box<TasksModel>(
-      HiveConstants.tasksBox,
-    ).values.toList();
-    final int pendingTasksLenght = allTasks.length;
-    await Hive.box(
-      HiveConstants.unitValuesBox,
-    ).put(HiveConstants.pendingTaskCount, pendingTasksLenght);
-  }
+  // Future<void> savePendingTasksCount() async {
+  //   final List<TasksModel> allTasks = Hive.box<TasksModel>(
+  //     HiveConstants.tasksBox,
+  //   ).values.toList();
+  //   final int pendingTasksLenght = allTasks.length;
+  //   await Hive.box(
+  //     HiveConstants.unitValuesBox,
+  //   ).put(HiveConstants.pendingTaskCount, pendingTasksLenght);
+  // }
 
   // Save Completed tasks Count
-  Future<void> saveCompletedTasksCount() async {
-    final List<TasksModel> allTasks = Hive.box<TasksModel>(
-      HiveConstants.tasksBox,
-    ).values.toList();
-    final int completedTasksLenght = allTasks
-        .where((task) {
-          return task.isTaskDone;
-        })
-        .toList()
-        .length;
-    await Hive.box(
-      HiveConstants.unitValuesBox,
-    ).put(HiveConstants.completedTaskCount, completedTasksLenght);
-  }
+  // Future<void> saveCompletedTasksCount() async {
+  //   final List<TasksModel> allTasks = Hive.box<TasksModel>(
+  //     HiveConstants.tasksBox,
+  //   ).values.toList();
+  //   final int completedTasksLenght = allTasks
+  //       .where((task) {
+  //         return task.isTaskDone;
+  //       })
+  //       .toList()
+  //       .length;
+  //   await Hive.box(
+  //     HiveConstants.unitValuesBox,
+  //   ).put(HiveConstants.completedTaskCount, completedTasksLenght);
+  // }
 
   Future<void> updateTodaysCount(Box<dynamic> valueBox) async {
     DateTime date = DateTime.now();
 
     // Format year & month with DateFormat
-    String ym = DateFormat('yyyy-MM').format(date);
+    String dateNow = DateFormat('yyyy-M-d').format(date);
 
     // Add day manually without leading zero
-    String dateNow = "$ym-${date.day}";
+    // String dateNow = '${date.year}-${date.month}-${date.day}';
+
+    log('Date In Update Habit Todays Count: $dateNow');
     final allTodayValues = valueBox.get(dateNow) ?? [];
     final totalCompletedCount = allTodayValues.where((eachModel) {
       return eachModel.isHabitCompleted == true;
@@ -120,10 +123,11 @@ class TaskService {
     String dateKey,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.habitKey;
     if (habitValue.habitVlaue == 0) {
       allValues.add(
         HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: 1,
           isHabitCompleted: true,
         ),
@@ -137,7 +141,7 @@ class TaskService {
       });
     } else {
       allValues.removeWhere((theHabit) {
-        return theHabit.habitKey == habit.habitKey;
+        return theHabit.habitKey == habitKey;
       });
       // Save the List in the box
       await Hive.box(
@@ -159,11 +163,12 @@ class TaskService {
     List todaysValueBox,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.habitKey;
     log('Value Count is Zero');
     if (habitValue.habitVlaue == 0) {
       todaysValueBox.add(
         HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: 1,
           isHabitCompleted: true,
         ),
@@ -176,7 +181,7 @@ class TaskService {
       });
     } else {
       todaysValueBox.removeWhere((theHabit) {
-        return theHabit.habitKey == habit.habitKey;
+        return theHabit.habitKey == habitKey;
       });
       await Hive.box(
         HiveConstants.habitValueBox,
@@ -195,6 +200,7 @@ class TaskService {
     String specificDate,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.key;
     if (habitValue.habitVlaue < habit.valueCount) {
       int value = habitValue.habitVlaue + 1;
 
@@ -206,7 +212,7 @@ class TaskService {
         // Not found — add
         allValues.add(
           HabitsValuesModel(
-            habitKey: habit.key,
+            habitKey: habitKey,
             habitVlaue: value,
             isHabitCompleted: (habitValue.habitVlaue + 1) == habit.valueCount,
           ),
@@ -214,7 +220,7 @@ class TaskService {
       } else {
         // Found — update
         allValues[index] = HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: value,
           isHabitCompleted: (habitValue.habitVlaue + 1) == habit.valueCount,
         );
@@ -238,13 +244,14 @@ class TaskService {
     String specificDate,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.habitKey;
     if (habitValue.habitVlaue != 0) {
       int value = habitValue.habitVlaue - 1;
       // In the upper line the 1 is being subtracted from habit value
       // because it already has 1 which shows the type of habit (custom)
       // Now to reset it to zero 1 is subtracted.
 
-      final index = allValues.indexWhere((item) => item.habitKey == habit.key);
+      final index = allValues.indexWhere((item) => item.habitKey == habitKey);
 
       if (index == -1) {
       } else {
@@ -253,7 +260,7 @@ class TaskService {
         }
         // Found — update
         allValues[index] = HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: value,
           isHabitCompleted: (habitValue.habitVlaue + 1) == habit.valueCount,
         );
@@ -274,14 +281,15 @@ class TaskService {
     String specificDate,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.habitKey;
     if (habitValue.habitVlaue > 0) {
-      final index = allValues.indexWhere((item) => item.habitKey == habit.key);
+      final index = allValues.indexWhere((item) => item.habitKey == habitKey);
 
       if (index == -1) {
         // Not found — add
         allValues.add(
           HabitsValuesModel(
-            habitKey: habit.key,
+            habitKey: habitKey,
             habitVlaue: 0,
             isHabitCompleted: false,
           ),
@@ -289,7 +297,7 @@ class TaskService {
       } else {
         // Found — update
         allValues[index] = HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: 0,
           isHabitCompleted: false,
         );
@@ -313,14 +321,15 @@ class TaskService {
     String specificDate,
     Box<dynamic> valueBox,
   ) async {
+    final habitKey = habit.habitKey;
     if (habitValue.habitVlaue != habit.valueCount) {
-      final index = allValues.indexWhere((item) => item.habitKey == habit.key);
+      final index = allValues.indexWhere((item) => item.habitKey == habitKey);
 
       if (index == -1) {
         // Not found — add
         allValues.add(
           HabitsValuesModel(
-            habitKey: habit.key,
+            habitKey: habitKey,
             habitVlaue: habit.valueCount,
             isHabitCompleted: true,
           ),
@@ -328,7 +337,7 @@ class TaskService {
       } else {
         // Found — update
         allValues[index] = HabitsValuesModel(
-          habitKey: habit.key,
+          habitKey: habitKey,
           habitVlaue: habit.valueCount,
           isHabitCompleted: true,
         );
@@ -343,6 +352,41 @@ class TaskService {
           await incrementPoints(15);
         }
       });
+    }
+  }
+
+  // Update All Habit Values for a Habit
+  //This function is called when a habit value of a habit id edited
+  // From Binary to Custom and Custom to Binary Value
+
+  Future<void> updateAllValues(
+    HabitModel uneditedHabit,
+    int newHabitValueCount,
+  ) async {
+    final habitKey = uneditedHabit.habitKey;
+
+    final allHabitValuesBox = Hive.box(HiveConstants.habitValueBox);
+    final allKeys = allHabitValuesBox.keys.cast<String>();
+    log('All Keys: $allKeys');
+
+    for (final dateKey in allKeys) {
+      final habitList = allHabitValuesBox.get(dateKey);
+      if (habitList == null) continue;
+
+      bool isUpdated = false;
+
+      final updatedList = habitList.map((habitValue) {
+        if (habitValue.habitKey == habitKey &&
+            habitValue.isHabitCompleted == true) {
+          isUpdated = true;
+          return habitValue.copyWith(habitVlaue: newHabitValueCount);
+        }
+        return habitValue;
+      }).toList();
+
+      if (isUpdated) {
+        await allHabitValuesBox.put(dateKey, updatedList);
+      }
     }
   }
 }

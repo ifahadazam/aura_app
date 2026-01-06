@@ -100,100 +100,103 @@ class MainPage extends StatelessWidget {
         elevation: 0,
         backgroundColor: AppColors.themeBlack,
         onPressed: () {
-          showModalBottomSheet(
-            showDragHandle: true,
-            elevation: 30,
-            isDismissible: true,
-            backgroundColor: AppColors.creamyWhiteColor,
-            context: context,
-            builder: (context) {
-              return Wrap(
-                children: [
-                  ListTile(
-                    onTap: () {
-                      Navigator.pop(context);
-                      context.pushNamed(RouteConstants.newHabitPageName);
-                    },
-                    leading: Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.xtraLightGreyColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          HugeIcons.strokeRoundedMedal05,
-                          color: AppColors.themeBlack,
-                          size: 23,
-                        ),
-                      ),
-                    ),
+          context.pushNamed(RouteConstants.newHabitPageName);
 
-                    title: Text(
-                      'Habit',
-                      style: TypographyTheme.simpleTitleStyle(fontSize: 16),
-                    ),
-                    subtitle: Text(
-                      'Activity that repeats it over time',
-                      style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.themeBlack,
-                      size: 20,
-                    ),
-                  ),
-                  ListTile(
-                    onTap: () {
-                      Navigator.pop(context);
-                      showModalBottomSheet(
-                        useSafeArea: true,
-                        showDragHandle: true,
-                        elevation: 30,
-                        isScrollControlled: true,
-                        backgroundColor: AppColors.creamyWhiteColor,
-                        context: context,
-                        builder: (context) {
-                          return CreateTask();
-                        },
-                      );
-                    },
-                    leading: Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.xtraLightGreyColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          HugeIcons.strokeRoundedTick01,
-                          color: AppColors.themeBlack,
-                          size: 23,
-                        ),
-                      ),
-                    ),
+          // showModalBottomSheet(
+          //   showDragHandle: true,
+          //   elevation: 30,
+          //   isDismissible: true,
+          //   backgroundColor: AppColors.creamyWhiteColor,
+          //   context: context,
+          //   builder: (context) {
+          //     return Wrap(
+          //       children: [
+          //         ListTile(
+          //           onTap: () {
+          //             Navigator.pop(context);
+          //             context.pushNamed(RouteConstants.newHabitPageName);
 
-                    title: Text(
-                      'Task',
-                      style: TypographyTheme.simpleTitleStyle(fontSize: 16),
-                    ),
-                    subtitle: Text(
-                      'Single Instance activity.',
-                      style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
-                    ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios,
-                      color: AppColors.themeBlack,
-                      size: 20,
-                    ),
-                  ),
-                  AppConstants.defaultSpace,
-                ],
-              );
-            },
-          );
+          //           },
+          //           leading: Container(
+          //             height: 40,
+          //             width: 40,
+          //             decoration: BoxDecoration(
+          //               color: AppColors.xtraLightGreyColor,
+          //               shape: BoxShape.circle,
+          //             ),
+          //             child: Center(
+          //               child: Icon(
+          //                 HugeIcons.strokeRoundedMedal05,
+          //                 color: AppColors.themeBlack,
+          //                 size: 23,
+          //               ),
+          //             ),
+          //           ),
+
+          //           title: Text(
+          //             'Habit',
+          //             style: TypographyTheme.simpleTitleStyle(fontSize: 16),
+          //           ),
+          //           subtitle: Text(
+          //             'Activity that repeats it over time',
+          //             style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
+          //           ),
+          //           trailing: Icon(
+          //             Icons.arrow_forward_ios,
+          //             color: AppColors.themeBlack,
+          //             size: 20,
+          //           ),
+          //         ),
+          //         ListTile(
+          //           onTap: () {
+          //             Navigator.pop(context);
+          //             showModalBottomSheet(
+          //               useSafeArea: true,
+          //               showDragHandle: true,
+          //               elevation: 30,
+          //               isScrollControlled: true,
+          //               backgroundColor: AppColors.creamyWhiteColor,
+          //               context: context,
+          //               builder: (context) {
+          //                 return CreateTask();
+          //               },
+          //             );
+          //           },
+          //           leading: Container(
+          //             height: 40,
+          //             width: 40,
+          //             decoration: BoxDecoration(
+          //               color: AppColors.xtraLightGreyColor,
+          //               shape: BoxShape.circle,
+          //             ),
+          //             child: Center(
+          //               child: Icon(
+          //                 HugeIcons.strokeRoundedTick01,
+          //                 color: AppColors.themeBlack,
+          //                 size: 23,
+          //               ),
+          //             ),
+          //           ),
+
+          //           title: Text(
+          //             'Task',
+          //             style: TypographyTheme.simpleTitleStyle(fontSize: 16),
+          //           ),
+          //           subtitle: Text(
+          //             'Single Instance activity.',
+          //             style: TypographyTheme.simpleSubTitleStyle(fontSize: 14),
+          //           ),
+          //           trailing: Icon(
+          //             Icons.arrow_forward_ios,
+          //             color: AppColors.themeBlack,
+          //             size: 20,
+          //           ),
+          //         ),
+          //         AppConstants.defaultSpace,
+          //       ],
+          //     );
+          //   },
+          // );
         },
         child: Icon(Icons.add, size: 26, color: AppColors.themeWhite),
       ),

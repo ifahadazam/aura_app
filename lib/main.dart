@@ -20,11 +20,11 @@ import 'package:life_goal/features/goals/presentation/bloc/show_search_task_bar_
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(TasksModelAdapter());
+  // Hive.registerAdapter(TasksModelAdapter());
   Hive.registerAdapter(HabitModelAdapter());
   Hive.registerAdapter(HabitsValuesModelAdapter());
-  await Hive.openBox<TasksModel>(HiveConstants.tasksBox);
-  await Hive.openBox<TasksModel>(HiveConstants.filteredTasksBox);
+  // await Hive.openBox<TasksModel>(HiveConstants.tasksBox);
+  // await Hive.openBox<TasksModel>(HiveConstants.filteredTasksBox);
   await Hive.openBox(HiveConstants.habitValueBox);
   await Hive.openBox<HabitModel>(HiveConstants.habitsBox);
   await Hive.openBox(HiveConstants.unitValuesBox);

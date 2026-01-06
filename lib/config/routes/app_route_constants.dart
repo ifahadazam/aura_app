@@ -4,7 +4,7 @@ class RouteConstants {
   static const mainPageName = 'main_page';
   static const settingsPageName = 'settings_page';
   static const goodHabitsPageName = 'good_habits';
-  static const tasksPageName = 'tasks';
+  // static const tasksPageName = 'tasks';
   static const newHabitPageName = 'new_habit';
   static const onboardingPageName = 'onboarding';
   static const userGoalPageName = 'user_goal';

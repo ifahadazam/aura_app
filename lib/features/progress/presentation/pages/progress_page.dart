@@ -527,13 +527,16 @@ class AllHabitStats extends StatelessWidget {
                                     AppConstants.defaultDoubleSpace,
                                     AppConstants.defualtHalfSpace,
                                     InkWell(
-                                      onTap: () {
-                                        Hive.box(
+                                      onTap: () async {
+                                        await Hive.box(
                                           HiveConstants.unitValuesBox,
                                         ).put(
                                           HiveConstants.selectedHabitStat,
                                           '',
                                         );
+                                        if (context.mounted) {
+                                          context.pop();
+                                        }
                                       },
                                       child: Container(
                                         margin: EdgeInsets.symmetric(
@@ -592,8 +595,14 @@ class AllHabitStats extends StatelessWidget {
                                                 final HabitModel eachHabit =
                                                     allHabits[index];
                                                 return InkWell(
-                                                  onTap: () {
-                                                    Hive.box(
+                                                  onTap: () async {
+                                                    log(
+                                                      'HK: ${eachHabit.habitKey}',
+                                                    );
+                                                    log(
+                                                      'SelectedHabit: $selectedHabit',
+                                                    );
+                                                    await Hive.box(
                                                       HiveConstants
                                                           .unitValuesBox,
                                                     ).put(
@@ -601,6 +610,9 @@ class AllHabitStats extends StatelessWidget {
                                                           .selectedHabitStat,
                                                       eachHabit.habitKey,
                                                     );
+                                                    if (context.mounted) {
+                                                      context.pop();
+                                                    }
                                                   },
                                                   child: Container(
                                                     margin: EdgeInsets.symmetric(

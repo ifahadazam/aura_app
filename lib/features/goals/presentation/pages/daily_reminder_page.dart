@@ -11,7 +11,13 @@ const allWeekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const weekDaysNumber = [1, 2, 3, 4, 5, 6, 7];
 
 class DailyReminderPage extends StatefulWidget {
-  const DailyReminderPage({super.key});
+  const DailyReminderPage({
+    super.key,
+    required this.reminderDays,
+    required this.reminderTime,
+  });
+  final List<int> reminderDays;
+  final String reminderTime;
 
   @override
   State<DailyReminderPage> createState() => _DailyReminderPageState();
@@ -48,9 +54,11 @@ class _DailyReminderPageState extends State<DailyReminderPage> {
           valueListenable: Hive.box(HiveConstants.temporaryBuffer).listenable(),
           builder: (context, reminderBox, child) {
             final List<int> selectedDays =
-                reminderBox.get(HiveConstants.reminderDays) ?? [];
+                reminderBox.get(HiveConstants.reminderDays) ??
+                widget.reminderDays;
             final String time =
-                reminderBox.get(HiveConstants.reminderTime) ?? selectedTime;
+                reminderBox.get(HiveConstants.reminderTime) ??
+                widget.reminderTime;
             return Column(
               children: [
                 Align(

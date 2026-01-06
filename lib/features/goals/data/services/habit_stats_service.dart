@@ -75,8 +75,7 @@ class HabitStatsService {
 
     // Check today's streak
     final now = DateTime.now();
-    final todayStr =
-        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final todayStr = '${now.year}-${now.month}-${now.day}';
 
     if (habitValueBox.containsKey(todayStr)) {
       List<HabitsValuesModel> todayList = List<HabitsValuesModel>.from(
@@ -120,18 +119,18 @@ class HabitStatsService {
   }
 
   Future<int> totalDaysTracked(
-    Box habitsBox,
+    Box habitsValuesBox,
     Box allHabits,
     HabitModel habitModel,
   ) async {
-    final allDateKeys = habitsBox.keys.cast<String>().toList()
+    final allDateKeys = habitsValuesBox.keys.cast<String>().toList()
       ..sort((a, b) => parseDate(a)!.compareTo(parseDate(b)!));
 
     DateTime? firstCompletedDate;
     DateTime? lastCompletedDate;
 
     for (final dateKey in allDateKeys) {
-      final list = habitsBox.get(dateKey);
+      final list = habitsValuesBox.get(dateKey);
 
       if (list.any((item) => item.isHabitCompleted == true)) {
         final parsed = parseDate(dateKey)!;
@@ -165,16 +164,16 @@ class HabitStatsService {
   }
 
   Future<int> totalCompleted(
-    Box habitsBox,
+    Box habitsValuesBox,
     Box allHabits,
     HabitModel habitModel,
   ) async {
-    final allDateKeys = habitsBox.keys.cast<String>().toList();
+    final allDateKeys = habitsValuesBox.keys.cast<String>().toList();
 
     int completedDays = 0;
 
     for (final dateKey in allDateKeys) {
-      final list = habitsBox.get(dateKey);
+      final list = habitsValuesBox.get(dateKey);
 
       final bool anyCompleted = list.any(
         (item) => item.isHabitCompleted == true,
@@ -194,12 +193,12 @@ class HabitStatsService {
   }
 
   Future<int> skippedDays(
-    Box habitsBox,
+    Box habitsValuesBox,
     Box allHabits, // not used, kept for consistency
     HabitModel habitModel,
   ) async {
     int skippedDays = 0;
-    final allDateKeys = habitsBox.keys.cast<String>().toList();
+    final allDateKeys = habitsValuesBox.keys.cast<String>().toList();
 
     if (allDateKeys.isEmpty) return 0;
 
@@ -211,7 +210,7 @@ class HabitStatsService {
 
     // ---- Find first & last completed date + count completed days
     for (final dateKey in allDateKeys) {
-      final list = habitsBox.get(dateKey);
+      final list = habitsValuesBox.get(dateKey);
 
       final bool completed = list.any(
         (item) =>
@@ -260,13 +259,17 @@ class HabitStatsService {
   }
 
   Future<double> completionRate(
-    Box habitsBox,
+    Box habitsValuesBox,
     Box allHabits,
     HabitModel habitModel,
   ) async {
-    final totalDays = await totalDaysTracked(habitsBox, allHabits, habitModel);
+    final totalDays = await totalDaysTracked(
+      habitsValuesBox,
+      allHabits,
+      habitModel,
+    );
     final totalCompletionDays = await totalCompleted(
-      habitsBox,
+      habitsValuesBox,
       allHabits,
       habitModel,
     );
@@ -295,12 +298,12 @@ class HabitStatsService {
   }
 
   Future<void> calculateHabitStats({
-    required Box habitsBox,
-    required Box allHabits,
+    required Box habitsValueBox,
+    required Box allHabitsBox,
     required HabitModel habitModel,
   }) async {
     // 🔴 RESET FIRST (prevents stale values)
-    await allHabits.put(habitModel.habitKey, resetHabitStats(habitModel));
+    await allHabitsBox.put(habitModel.habitKey, resetHabitStats(habitModel));
 
     DateTime? parseDate(String date) {
       final parts = date.split("-");
@@ -313,7 +316,7 @@ class HabitStatsService {
       );
     }
 
-    final List<String> dateKeys = habitsBox.keys.cast<String>().toList();
+    final List<String> dateKeys = habitsValueBox.keys.cast<String>().toList();
     if (dateKeys.isEmpty) return;
 
     dateKeys.sort((a, b) => parseDate(a)!.compareTo(parseDate(b)!));
@@ -323,7 +326,7 @@ class HabitStatsService {
     int completedDays = 0;
 
     for (final dateKey in dateKeys) {
-      final list = habitsBox.get(dateKey);
+      final list = habitsValueBox.get(dateKey);
 
       final bool completed = list.any(
         (item) =>
@@ -346,10 +349,18 @@ class HabitStatsService {
 
     final double completionRate = completedDays / totalTrackedDays;
 
-    final streak = calculateHabitStreak(habitModel, habitsBox, allHabits);
-    final skippedCount = await skippedDays(habitsBox, allHabits, habitModel);
+    final streak = calculateHabitStreak(
+      habitModel,
+      habitsValueBox,
+      allHabitsBox,
+    );
+    final skippedCount = await skippedDays(
+      habitsValueBox,
+      allHabitsBox,
+      habitModel,
+    );
 
-    await allHabits.put(
+    await allHabitsBox.put(
       habitModel.habitKey,
       habitModel.copyWith(
         bestStreak: streak['bestStreak'],
@@ -372,8 +383,8 @@ class HabitStatsService {
     // ✅ Format: yyyy-MM-dd
     String formatDate(DateTime date) {
       final y = date.year.toString();
-      final m = date.month.toString().padLeft(2, '0');
-      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString(); // no padding
+      final d = date.day.toString(); // no padding
       return "$y-$m-$d";
     }
 
@@ -420,8 +431,8 @@ class HabitStatsService {
     // yyyy-MM-dd formatter
     String formatDate(DateTime date) {
       final y = date.year.toString();
-      final m = date.month.toString().padLeft(2, '0');
-      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString(); // no padding
+      final d = date.day.toString(); // no padding
       return "$y-$m-$d";
     }
 
@@ -471,8 +482,8 @@ class HabitStatsService {
 
     String formatDate(DateTime date) {
       final y = date.year.toString();
-      final m = date.month.toString().padLeft(2, '0');
-      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString(); // no padding
+      final d = date.day.toString(); // no padding
       return "$y-$m-$d";
     }
 
@@ -517,8 +528,8 @@ class HabitStatsService {
 
     String formatDate(DateTime date) {
       final y = date.year.toString();
-      final m = date.month.toString().padLeft(2, '0');
-      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString(); // no padding
+      final d = date.day.toString(); // no padding
       return "$y-$m-$d";
     }
 

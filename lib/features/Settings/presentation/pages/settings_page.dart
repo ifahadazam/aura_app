@@ -51,24 +51,24 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SettingTile(
-                        onTap: () {
-                          final String? futureGoalValue = Hive.box(
-                            HiveConstants.futureGoalBox,
-                          ).get(HiveConstants.futureGoalBoxValue);
-                          //context.pushNamed(RouteConstants.onboardingPageName);
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return UpdateGoalDialog(
-                                futureGoal: futureGoalValue,
-                              );
-                            },
-                          );
-                        },
-                        iconData: CupertinoIcons.pin_fill,
-                        title: 'Update Goal',
-                      ),
+                      // SettingTile(
+                      //   onTap: () {
+                      //     final String? futureGoalValue = Hive.box(
+                      //       HiveConstants.futureGoalBox,
+                      //     ).get(HiveConstants.futureGoalBoxValue);
+                      //     //context.pushNamed(RouteConstants.onboardingPageName);
+                      //     showDialog(
+                      //       context: context,
+                      //       builder: (context) {
+                      //         return UpdateGoalDialog(
+                      //           futureGoal: futureGoalValue,
+                      //         );
+                      //       },
+                      //     );
+                      //   },
+                      //   iconData: CupertinoIcons.pin_fill,
+                      //   title: 'Update Goal',
+                      // ),
                       SettingTile(
                         iconData: CupertinoIcons.moon_fill,
                         title: 'Theme',

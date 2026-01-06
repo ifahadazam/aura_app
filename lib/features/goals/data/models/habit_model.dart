@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:hive_flutter/hive_flutter.dart';
 part 'habit_model.g.dart';
 
@@ -115,5 +117,69 @@ class HabitModel extends HiveObject {
       totalTrackedDays: totalTrackedDays ?? this.totalTrackedDays,
       completionRate: completionRate ?? this.completionRate,
     );
+  }
+}
+
+extension HabitModelMapper on HabitModel {
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'habitValue': habitValue,
+      'valueCount': valueCount,
+      'streakGoal': streakGoal,
+      'isDone': isDone,
+      'reminderDays': reminderDays,
+      'reminderTime': reminderTime,
+      'habitColor': habitColor,
+      'habitKey': habitKey,
+      'currentStreak': currentStreak,
+      'bestStreak': bestStreak,
+      'totalTrackedDays': totalTrackedDays,
+      'totalCompletedDays': totalCompletedDays,
+      'totalSkippedDays': totalSkippedDays,
+      'completionRate': completionRate,
+    };
+  }
+
+  static HabitModel fromMap(Map<String, dynamic> map) {
+    return HabitModel(
+      title: map['title'] as String,
+      description: map['description'] as String,
+      habitValue: map['habitValue'] as int,
+      valueCount: map['valueCount'] as int,
+      streakGoal: map['streakGoal'] as int,
+      isDone: map['isDone'] as bool,
+      reminderDays: List<int>.from(map['reminderDays'] ?? []),
+      reminderTime: map['reminderTime'] as String,
+      habitColor: map['habitColor'] as int,
+      habitKey: map['habitKey'] as String,
+      currentStreak: map['currentStreak'] as int? ?? 0,
+      bestStreak: map['bestStreak'] as int? ?? 0,
+      totalTrackedDays: map['totalTrackedDays'] as int? ?? 0,
+      totalCompletedDays: map['totalCompletedDays'] as int? ?? 0,
+      totalSkippedDays: map['totalSkippedDays'] as int? ?? 0,
+      completionRate: (map['completionRate'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class HabitCodec extends Codec<HabitModel, Object?> {
+  @override
+  Converter<HabitModel, Object?> get encoder => _HabitEncoder();
+
+  @override
+  Converter<Object?, HabitModel> get decoder => _HabitDecoder();
+}
+
+class _HabitEncoder extends Converter<HabitModel, Object?> {
+  @override
+  Object? convert(HabitModel habit) => habit.toMap();
+}
+
+class _HabitDecoder extends Converter<Object?, HabitModel> {
+  @override
+  HabitModel convert(Object? input) {
+    return HabitModelMapper.fromMap(input as Map<String, dynamic>);
   }
 }

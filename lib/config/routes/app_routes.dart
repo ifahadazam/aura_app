@@ -14,6 +14,7 @@ import 'package:life_goal/welcome/presentation/pages/user_goal_page.dart';
 class AppRoutes {
   static final GoRouter appRouter = GoRouter(
     debugLogDiagnostics: true,
+    //  extraCodec: HabitCodec(),
     routes: appRoutes,
   );
 }
@@ -40,13 +41,13 @@ final appRoutes = <GoRoute>[
           return const GoodHabits();
         },
       ),
-      GoRoute(
-        name: RouteConstants.tasksPageName,
-        path: 'tasks',
-        builder: (context, state) {
-          return const GoalsPage();
-        },
-      ),
+      // GoRoute(
+      //   name: RouteConstants.tasksPageName,
+      //   path: 'tasks',
+      //   builder: (context, state) {
+      //     return const GoalsPage();
+      //   },
+      // ),
       GoRoute(
         name: RouteConstants.newHabitPageName,
         path: 'new_habit',
@@ -57,6 +58,7 @@ final appRoutes = <GoRoute>[
       GoRoute(
         name: RouteConstants.editHabitsPageName,
         path: 'edit_habit',
+
         builder: (context, state) {
           HabitModel habit = state.extra as HabitModel;
 
